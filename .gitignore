@@ -1,0 +1,20 @@
+# Tabula Project GitIgnore
+
+# --- 发行相关 (Release Related) ---
+*.zip
+dist/
+build/
+
+# --- 文档与自述相关 (Docs & PRD Related) ---
+# 根据需求，隐藏内部管理文档
+docs/
+*.bak
+*.log
+
+# --- 开发环境与辅助工具 (Dev Environment) ---
+scripts/
+.vscode/
+.idea/
+node_modules/
+.DS_Store
+Thumbs.db

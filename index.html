@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- 为避免闪烁和提升渲染速度，样式直接放在本页面引入 -->
+  <!-- 同步防闪烁预加载（必须在 CSS 之后、body 之前，无 defer/async） -->
+  <script src="js/preload.js"></script>
+  <link rel="stylesheet" href="css/style.css">
+  <title>Tabula</title>
+</head>
+<body>
+  <!-- 背景层：用于渲染纯黑渐变或未来用户的壁纸 -->
+  <div class="wallpaper" id="bg-layer"></div>
+
+  <!-- 中心搜索模块层 -->
+  <main class="center-container">
+    <div class="search-box-wrapper no-init-transition">
+      <!-- 禁止所有浏览器原生检查行为，保障极简输入体验 -->
+      <input 
+        type="text" 
+        id="core-searchInput" 
+        class="search-input" 
+        autocomplete="off" 
+        spellcheck="false" 
+      >
+      <!-- Mode B 触发后的书签下拉列表将在此通过 JS 动态注入 -->
+      <div id="bookmark-dropdown-container"></div>
+    </div>
+  </main>
+
+  <!-- Phase 4: 侧边抽屉界面 (Drawer) -->
+  <aside id="drawer-container" class="drawer">
+    <div class="drawer-header">
+      <h2>Bookmarks</h2>
+      <button id="drawer-close-btn" class="icon-btn" title="Close (ESC)">✕</button>
+    </div>
+    
+    <div class="drawer-actions">
+      <button id="btn-add-new" class="action-btn primary"><span class="t-icon i-plus"></span> Add New Bookmark</button>
+      <div class="data-actions">
+        <button id="btn-export" class="action-btn"><span class="t-icon i-export"></span> Export</button>
+        <button id="btn-import" class="action-btn"><span class="t-icon i-import"></span> Import</button>
+        <input type="file" id="import-file" accept=".html,.htm" style="display: none;">
+        <button id="btn-clear-all" class="action-btn" style="color: #dc3545;" title="Clear All"><span class="t-icon i-trash"></span> Clear</button>
+      </div>
+      
+      <!-- 局部检索区域 -->
+      <div class="drawer-search-wrapper">
+        <input type="text" id="drawer-search-input" class="drawer-search-input" placeholder="Search Bookmarks..." autocomplete="off" spellcheck="false">
+      </div>
+    </div>
+
+    <!-- 抽屉内的详细列表区域 -->
+    <div id="drawer-list-container" class="drawer-list"></div>
+  </aside>
+
+  <!-- 浮动设置按钮 (左下角) -->
+  <button id="btn-settings-open" class="floating-settings-btn" title="Settings / Wallpaper">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+      <circle cx="12" cy="12" r="3"></circle>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+    </svg>
+  </button>
+
+  <!-- 全局设置中心 (居中横向模态框) -->
+  <div id="settings-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Appearance & Engine</h2>
+        <button id="btn-settings-close" class="icon-btn" title="Close"><span class="t-icon i-close"></span></button>
+      </div>
+      <div class="modal-body">
+        
+        <!-- 搜索引擎配置 -->
+        <div class="setting-group">
+          <label>Default Search Engine</label>
+          <div class="engine-options">
+            <button class="engine-btn" data-engine="google">Google</button>
+            <button class="engine-btn" data-engine="bing">Bing</button>
+            <button class="engine-btn" data-engine="baidu">Baidu</button>
+            <button class="engine-btn" data-engine="custom">Custom</button>
+          </div>
+          <!-- 自定义引擎输入框（由 JS 控制显隐） -->
+          <div id="custom-engine-wrapper" style="display: none; margin-top: 12px;">
+            <input type="text" id="custom-engine-url" class="setting-input" placeholder="Search URL (e.g. https://duckduckgo.com/?q=)" autocomplete="off">
+          </div>
+        </div>
+
+        <!-- 背景配置 -->
+        <div class="setting-group">
+          <label>Background Style</label>
+          <div class="bg-setting-list">
+            <div class="bg-item" title="Primary Background Color (layer below wallpaper)">
+              <span>Layer Color:</span>
+              <input type="color" id="bg-color-picker" value="#0f0f11">
+            </div>
+            <div class="bg-item" title="Base blur for the wallpaper">
+              <span>Wallpaper Blur:</span>
+              <input type="range" id="wp-blur-slider" min="0" max="40" step="1" value="0" class="setting-slider">
+            </div>
+            <div class="bg-item" title="Base brightness for the wallpaper">
+              <span>Brightness:</span>
+              <input type="range" id="wp-brightness-slider" min="0.1" max="1.5" step="0.05" value="1.0" class="setting-slider">
+            </div>
+            <div class="bg-item">
+              <span>Wallpaper:</span>
+              <div class="action-group-inline">
+                <button id="btn-upload-wallpaper" class="action-btn btn-inline">Upload</button>
+                <button id="btn-delete-wallpaper" class="action-btn btn-inline btn-danger-outline" title="Remove current wallpaper">Remove</button>
+              </div>
+            </div>
+          </div>
+          <input type="file" id="wallpaper-file" accept="image/png, image/jpeg, image/webp" style="display: none;">
+          <button id="btn-reset-bg" class="action-btn" style="margin-top: 24px; color: #ff6b6b; border-color: rgba(220,53,69,0.3);">Reset to Default Black</button>
+        </div>
+
+        <!-- 搜索框深度定制 -->
+        <div class="setting-group">
+          <label>Search Box Tuning</label>
+          <div class="bg-setting-list">
+            <div class="bg-item" title="Adjust the width of the search box">
+              <span>Width:</span>
+              <input type="range" id="search-width-slider" min="400" max="900" step="10" value="560" class="setting-slider">
+            </div>
+            <div class="bg-item" title="Backdrop filter blur for the search box">
+              <span>Search Bar Blur:</span>
+              <input type="range" id="search-backdrop-blur-slider" min="0" max="60" step="1" value="20" class="setting-slider">
+            </div>
+            <div class="bg-item" title="Overall opacity of the search area">
+              <span>Opacity:</span>
+              <input type="range" id="search-opacity-slider" min="0" max="1" step="0.1" value="0.1" class="setting-slider">
+            </div>
+            <div class="bg-item" title="Horizontal position of the search box">
+              <span>Horizontal Pos:</span>
+              <input type="range" id="search-left-slider" min="0" max="100" step="1" value="50" class="setting-slider">
+            </div>
+            <div class="bg-item" title="Vertical position of the search box">
+              <span>Vertical Pos:</span>
+              <input type="range" id="search-top-slider" min="0" max="100" step="1" value="45" class="setting-slider">
+            </div>
+            <div class="bg-item">
+              <div class="action-group-inline" style="width: 100%; justify-content: flex-end; gap: 6px;">
+                <button id="btn-center-x" class="action-btn btn-inline" style="font-size: 11px; padding: 4px 8px;">Center X</button>
+                <button id="btn-center-y" class="action-btn btn-inline" style="font-size: 11px; padding: 4px 8px;">Center Y</button>
+                <button id="btn-center-all" class="action-btn btn-inline" style="font-size: 11px; padding: 4px 8px; background: rgba(88, 101, 242, 0.2); border-color: #5865f2;">All Center</button>
+              </div>
+            </div>
+          </div>
+          <div class="settings-divider"></div>
+
+          <!-- NEW Phase 2.9: Backup & Restore -->
+          <div class="setting-group backup-section">
+            <label>Backup & Manage</label>
+            <p class="section-desc">Export or import all your settings and bookmarks (JSON).</p>
+            <div class="action-buttons-grid">
+              <button id="btn-export-backup" class="action-btn">Export Backup</button>
+              <button id="btn-import-trigger" class="action-btn secondary">Import Backup</button>
+            </div>
+            <input type="file" id="input-import-backup" style="display:none" accept=".json">
+          </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- JS 载入顺序很重要，settings 是配置底座 -->
+  <script src="js/idb.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/settings.js"></script>
+  <script src="js/pinyin_match.js"></script>
+  <script src="js/search.js"></script>
+  <script src="js/drawer.js"></script>
+
+  <!-- 初始化环境预热 -->
+  <script src="js/main.js"></script>
+</body>
+</html>
