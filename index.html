@@ -66,101 +66,123 @@
   <!-- 全局设置中心 (居中横向模态框) -->
   <div id="settings-modal" class="modal-overlay" style="display: none;">
     <div class="modal-content">
-      <div class="modal-header">
-        <h2>Appearance & Engine</h2>
-        <button id="btn-settings-close" class="icon-btn" title="Close"><span class="t-icon i-close"></span></button>
-      </div>
-      <div class="modal-body">
-        
-        <!-- 搜索引擎配置 -->
-        <div class="setting-group">
-          <label>Default Search Engine</label>
-          <div class="engine-options">
-            <button class="engine-btn" data-engine="google">Google</button>
-            <button class="engine-btn" data-engine="bing">Bing</button>
-            <button class="engine-btn" data-engine="baidu">Baidu</button>
-            <button class="engine-btn" data-engine="custom">Custom</button>
-          </div>
-          <!-- 自定义引擎输入框（由 JS 控制显隐） -->
-          <div id="custom-engine-wrapper" style="display: none; margin-top: 12px;">
-            <input type="text" id="custom-engine-url" class="setting-input" placeholder="Search URL (e.g. https://duckduckgo.com/?q=)" autocomplete="off">
-          </div>
+      <!-- 侧边栏导航 -->
+      <aside class="modal-sidebar">
+        <div class="modal-header">
+          <h2>Settings</h2>
         </div>
+        <nav class="modal-nav">
+          <button class="nav-item active" data-tab="engine"><span class="t-icon i-search"></span> Search Engine</button>
+          <button class="nav-item" data-tab="background"><span class="t-icon i-image"></span> Background</button>
+          <button class="nav-item" data-tab="interface"><span class="t-icon i-layout"></span> Interface</button>
+          <button class="nav-item" data-tab="data"><span class="t-icon i-database"></span> Data & Backup</button>
+        </nav>
+      </aside>
 
-        <!-- 背景配置 -->
-        <div class="setting-group">
-          <label>Background Style</label>
-          <div class="bg-setting-list">
-            <div class="bg-item" title="Primary Background Color (layer below wallpaper)">
-              <span>Layer Color:</span>
-              <input type="color" id="bg-color-picker" value="#0f0f11">
-            </div>
-            <div class="bg-item" title="Base blur for the wallpaper">
-              <span>Wallpaper Blur:</span>
-              <input type="range" id="wp-blur-slider" min="0" max="40" step="1" value="0" class="setting-slider">
-            </div>
-            <div class="bg-item" title="Base brightness for the wallpaper">
-              <span>Brightness:</span>
-              <input type="range" id="wp-brightness-slider" min="0.1" max="1.5" step="0.05" value="1.0" class="setting-slider">
-            </div>
-            <div class="bg-item">
-              <span>Wallpaper:</span>
-              <div class="action-group-inline">
-                <button id="btn-upload-wallpaper" class="action-btn btn-inline">Upload</button>
-                <button id="btn-delete-wallpaper" class="action-btn btn-inline btn-danger-outline" title="Remove current wallpaper">Remove</button>
+      <!-- 主内容区 -->
+      <main class="modal-main">
+        <div class="modal-topbar">
+          <button id="btn-settings-close" class="icon-btn" title="Close"><span class="t-icon i-close"></span></button>
+        </div>
+        <div class="modal-body">
+          
+          <!-- Tab: Search Engine -->
+          <div class="tab-pane active" id="tab-engine">
+            <div class="setting-group">
+              <label>Default Search Engine</label>
+              <div class="engine-options">
+                <button class="engine-btn" data-engine="google">Google</button>
+                <button class="engine-btn" data-engine="bing">Bing</button>
+                <button class="engine-btn" data-engine="baidu">Baidu</button>
+                <button class="engine-btn" data-engine="custom">Custom</button>
+              </div>
+              <div id="custom-engine-wrapper" style="display: none; margin-top: 12px;">
+                <input type="text" id="custom-engine-url" class="setting-input" placeholder="Search URL (e.g. https://duckduckgo.com/?q=)" autocomplete="off">
               </div>
             </div>
           </div>
-          <input type="file" id="wallpaper-file" accept="image/png, image/jpeg, image/webp" style="display: none;">
-          <button id="btn-reset-bg" class="action-btn" style="margin-top: 24px; color: #ff6b6b; border-color: rgba(220,53,69,0.3);">Reset to Default Black</button>
-        </div>
 
-        <!-- 搜索框深度定制 -->
-        <div class="setting-group">
-          <label>Search Box Tuning</label>
-          <div class="bg-setting-list">
-            <div class="bg-item" title="Adjust the width of the search box">
-              <span>Width:</span>
-              <input type="range" id="search-width-slider" min="400" max="900" step="10" value="560" class="setting-slider">
+          <!-- Tab: Background -->
+          <div class="tab-pane" id="tab-background">
+            <div class="setting-group">
+              <label>Background Style</label>
+              <div class="bg-setting-list">
+                <div class="bg-item" title="Primary Background Color (layer below wallpaper)">
+                  <span>Layer Color:</span>
+                  <input type="color" id="bg-color-picker" value="#0f0f11">
+                </div>
+                <div class="bg-item" title="Base blur for the wallpaper">
+                  <span>Wallpaper Blur:</span>
+                  <input type="range" id="wp-blur-slider" min="0" max="40" step="1" value="0" class="setting-slider">
+                </div>
+                <div class="bg-item" title="Base brightness for the wallpaper">
+                  <span>Brightness:</span>
+                  <input type="range" id="wp-brightness-slider" min="0.1" max="1.5" step="0.05" value="1.0" class="setting-slider">
+                </div>
+                <div class="bg-item">
+                  <span>Wallpaper:</span>
+                  <div class="action-group-inline">
+                    <button id="btn-upload-wallpaper" class="action-btn btn-inline">Upload</button>
+                    <button id="btn-delete-wallpaper" class="action-btn btn-inline btn-danger-outline" title="Remove current wallpaper">Remove</button>
+                  </div>
+                </div>
+              </div>
+              <input type="file" id="wallpaper-file" accept="image/png, image/jpeg, image/webp" style="display: none;">
+              <button id="btn-reset-bg" class="action-btn" style="margin-top: 24px; color: #ff6b6b; border-color: rgba(220,53,69,0.3);">Reset to Default Black</button>
             </div>
-            <div class="bg-item" title="Backdrop filter blur for the search box">
-              <span>Search Bar Blur:</span>
-              <input type="range" id="search-backdrop-blur-slider" min="0" max="60" step="1" value="20" class="setting-slider">
-            </div>
-            <div class="bg-item" title="Overall opacity of the search area">
-              <span>Opacity:</span>
-              <input type="range" id="search-opacity-slider" min="0" max="1" step="0.1" value="0.1" class="setting-slider">
-            </div>
-            <div class="bg-item" title="Horizontal position of the search box">
-              <span>Horizontal Pos:</span>
-              <input type="range" id="search-left-slider" min="0" max="100" step="1" value="50" class="setting-slider">
-            </div>
-            <div class="bg-item" title="Vertical position of the search box">
-              <span>Vertical Pos:</span>
-              <input type="range" id="search-top-slider" min="0" max="100" step="1" value="45" class="setting-slider">
-            </div>
-            <div class="bg-item">
-              <div class="action-group-inline" style="width: 100%; justify-content: flex-end; gap: 6px;">
-                <button id="btn-center-x" class="action-btn btn-inline" style="font-size: 11px; padding: 4px 8px;">Center X</button>
-                <button id="btn-center-y" class="action-btn btn-inline" style="font-size: 11px; padding: 4px 8px;">Center Y</button>
-                <button id="btn-center-all" class="action-btn btn-inline" style="font-size: 11px; padding: 4px 8px; background: rgba(88, 101, 242, 0.2); border-color: #5865f2;">All Center</button>
+          </div>
+
+          <!-- Tab: Interface -->
+          <div class="tab-pane" id="tab-interface">
+            <div class="setting-group">
+              <label>Search Box Tuning</label>
+              <div class="bg-setting-list">
+                <div class="bg-item" title="Adjust the width of the search box">
+                  <span>Width:</span>
+                  <input type="range" id="search-width-slider" min="400" max="900" step="10" value="560" class="setting-slider">
+                </div>
+                <div class="bg-item" title="Backdrop filter blur for the search box">
+                  <span>Search Bar Blur:</span>
+                  <input type="range" id="search-backdrop-blur-slider" min="0" max="60" step="1" value="20" class="setting-slider">
+                </div>
+                <div class="bg-item" title="Overall opacity of the search area">
+                  <span>Opacity:</span>
+                  <input type="range" id="search-opacity-slider" min="0" max="1" step="0.1" value="0.1" class="setting-slider">
+                </div>
+                <div class="bg-item" title="Horizontal position of the search box">
+                  <span>Horizontal Pos:</span>
+                  <input type="range" id="search-left-slider" min="0" max="100" step="1" value="50" class="setting-slider">
+                </div>
+                <div class="bg-item" title="Vertical position of the search box">
+                  <span>Vertical Pos:</span>
+                  <input type="range" id="search-top-slider" min="0" max="100" step="1" value="45" class="setting-slider">
+                </div>
+                <div class="bg-item">
+                  <div class="action-group-inline" style="width: 100%; justify-content: flex-end; gap: 6px;">
+                    <button id="btn-center-x" class="action-btn btn-inline" style="font-size: 11px; padding: 4px 8px;">Center X</button>
+                    <button id="btn-center-y" class="action-btn btn-inline" style="font-size: 11px; padding: 4px 8px;">Center Y</button>
+                    <button id="btn-center-all" class="action-btn btn-inline" style="font-size: 11px; padding: 4px 8px; background: rgba(88, 101, 242, 0.2); border-color: #5865f2;">All Center</button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-          <div class="settings-divider"></div>
 
-          <!-- NEW Phase 2.9: Backup & Restore -->
-          <div class="setting-group backup-section">
-            <label>Backup & Manage</label>
-            <p class="section-desc">Export or import all your settings and bookmarks (JSON).</p>
-            <div class="action-buttons-grid">
-              <button id="btn-export-backup" class="action-btn">Export Backup</button>
-              <button id="btn-import-trigger" class="action-btn secondary">Import Backup</button>
+          <!-- Tab: Data -->
+          <div class="tab-pane" id="tab-data">
+            <div class="setting-group backup-section">
+              <label>Backup & Manage</label>
+              <p class="section-desc">Export or import all your settings and bookmarks (JSON).</p>
+              <div class="action-buttons-grid">
+                <button id="btn-export-backup" class="action-btn">Export Backup</button>
+                <button id="btn-import-trigger" class="action-btn secondary">Import Backup</button>
+              </div>
+              <input type="file" id="input-import-backup" style="display:none" accept=".json">
             </div>
-            <input type="file" id="input-import-backup" style="display:none" accept=".json">
           </div>
 
-      </div>
+        </div>
+      </main>
     </div>
   </div>
 

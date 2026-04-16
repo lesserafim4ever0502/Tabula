@@ -211,6 +211,27 @@ const TabulaSettings = (function () {
       setTimeout(() => modalOverlay.style.display = 'none', 300); // Wait for transition
     });
 
+    // Handle Tab Navigation
+    const navItems = document.querySelectorAll('.nav-item');
+    const tabPanes = document.querySelectorAll('.tab-pane');
+    navItems.forEach(item => {
+      item.addEventListener('click', () => {
+        // Remove active class from all nav items and panes
+        navItems.forEach(nav => nav.classList.remove('active'));
+        tabPanes.forEach(pane => pane.classList.remove('active'));
+        
+        // Add active class to clicked nav item
+        item.classList.add('active');
+        
+        // Add active class to corresponding tab pane
+        const targetTabId = 'tab-' + item.dataset.tab;
+        const targetPane = document.getElementById(targetTabId);
+        if (targetPane) {
+          targetPane.classList.add('active');
+        }
+      });
+    });
+
     // Handle Engine Select
     engineBtns.forEach(btn => {
       btn.addEventListener('click', async (e) => {
