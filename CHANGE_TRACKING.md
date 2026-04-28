@@ -1,5 +1,18 @@
 # CHANGE_TRACKING.md
 
+## [2026-04-25T14:17:15+08:00] - Wallpaper IndexedDB Recovery
+
+- js/settings.js L60 -> L60 (+1 -1)
+- js/settings.js L104 -> L105-119 (+15 -0)
+- js/settings.js L121 -> L136 (+1 -1)
+- js/settings.js L130-132 -> L145-153 (+8 -2)
+- js/settings.js total (+25 -4)
+- js/idb.js L10 -> L10 (+1 -1)
+- js/idb.js L27 -> L28-31 (+4 -0)
+- js/idb.js total (+5 -1)
+- js/preload.js L46 -> L46-52 (+7 -1)
+- js/preload.js total (+7 -1)
+
 ## [2026-04-02] - Icon Modernization (v3.0)
 
 - css/style.css L972 -> L972-1017 (+45 -0)

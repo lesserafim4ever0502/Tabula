@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - **Visual Polish**: Replaced character-based close buttons in `index.html` with vector counterparts.
 
 ### Fixed
+- **Wallpaper IDB Recovery**: Fixed uploaded wallpapers flashing briefly on refresh and then being covered by a solid color when the preload cache resolved empty after Chrome reinstall or IndexedDB store loss.
 - **Platform Inconsistency**: Emojis now render identically across Windows/macOS/Linux via CSS drawings.
 - **Bookmark Drawer Layout**: Fixed uneven horizontal gaps in the edit form by unifying padding and implementing a card-based aesthetic.
 

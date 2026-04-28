@@ -57,7 +57,7 @@ const TabulaSettings = (function () {
           // 额外检查：如果已经是数据库模式但缺少缩略图（针对迁移）
           if (config.bgImage === 'indexeddb:wallpaper' && !localStorage.getItem('tabula_bgThumb')) {
             console.log("[Tabula] Missing thumbnail for existing wallpaper, generating...");
-            const blob = await (window.__tabula_wp_cache || TabulaIDB.getWallpaper('main'));
+            const blob = await getWallpaperBlob();
             if (blob) {
               const img = new Image();
               img.onload = () => {
@@ -102,6 +102,21 @@ const TabulaSettings = (function () {
     });
   }
 
+  async function getWallpaperBlob() {
+    try {
+      if (window.__tabula_wp_cache) {
+        const cachedBlob = await window.__tabula_wp_cache;
+        if (cachedBlob) return cachedBlob;
+      }
+    } catch (e) {
+      console.warn("[Tabula] Preloaded wallpaper cache failed, retrying IDB.", e);
+    } finally {
+      window.__tabula_wp_cache = null;
+    }
+
+    return TabulaIDB.getWallpaper('main');
+  }
+
   async function applyBackground() {
     console.log("[Tabula] Applying background style... Image:", !!config.bgImage, "Color:", config.bgColor);
     
@@ -118,7 +133,7 @@ const TabulaSettings = (function () {
       bgLayer.style.backgroundColor = config.bgColor || '#0f0f11';
 
       if (config.bgImage === 'indexeddb:wallpaper') {
-        const blob = await (window.__tabula_wp_cache || TabulaIDB.getWallpaper('main'));
+        const blob = await getWallpaperBlob();
         if (blob) {
           const url = URL.createObjectURL(blob);
           console.log("[Tabula] Successfully generated ObjectURL for rendering.");
@@ -127,9 +142,15 @@ const TabulaSettings = (function () {
           bgLayer.style.backgroundImage = `url(${url})`;
           bgLayer.classList.add('wallpaper-fade');
         } else {
-          console.warn("[Tabula] Wallpaper blob missing in IDB, falling back to color.");
+          console.warn("[Tabula] Wallpaper blob missing in IDB, using fallback background.");
           bgLayer.style.filter = '';
-          bgLayer.style.backgroundColor = config.bgColor;
+          const thumb = localStorage.getItem('tabula_bgThumb');
+          if (thumb) {
+            bgLayer.style.backgroundImage = `url(${thumb})`;
+            bgLayer.classList.add('wallpaper-fade');
+          } else {
+            bgLayer.style.backgroundColor = config.bgColor;
+          }
         }
       } else {
         // Legacy/Direct Base64

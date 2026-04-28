@@ -43,7 +43,13 @@
   // 建立全局缓存 Promise，让后序的 settings.js 无需等待直接拿结果
   window.__tabula_wp_cache = new Promise(function(resolve) {
     try {
-      var request = indexedDB.open('TabulaDB', 1);
+      var request = indexedDB.open('TabulaDB', 2);
+      request.onupgradeneeded = function(e) {
+        var upgradeDb = e.target.result;
+        if (!upgradeDb.objectStoreNames.contains('wallpapers')) {
+          upgradeDb.createObjectStore('wallpapers', { keyPath: 'key' });
+        }
+      };
       request.onsuccess = function(e) {
         var db = e.target.result;
         // 容错处理：若是新库或非法库，直接 resolve null

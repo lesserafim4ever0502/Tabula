@@ -7,7 +7,7 @@
 const TabulaIDB = (function () {
   const DB_NAME = 'TabulaDB';
   const STORE_NAME = 'wallpapers';
-  const DB_VERSION = 1;
+  const DB_VERSION = 2;
 
   let db = null;
 
@@ -25,6 +25,10 @@ const TabulaIDB = (function () {
 
       request.onsuccess = (e) => {
         db = e.target.result;
+        db.onversionchange = () => {
+          db.close();
+          db = null;
+        };
         resolve(db);
       };
 
