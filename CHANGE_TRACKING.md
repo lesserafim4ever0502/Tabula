@@ -1,5 +1,14 @@
 # CHANGE_TRACKING.md
 
+## [2026-05-10T18:29:18+08:00] - Search Submit Dropdown Flash Fix
+
+- js/search.js L66-69 -> L66-79 (+14 -1)
+- js/search.js L156 -> L172 (+1 -0)
+- js/search.js L195 -> L211 (+1 -1)
+- js/search.js L205 -> removed (+0 -1)
+- js/search.js L218 -> L233 (+1 -1)
+- js/search.js total (+19 -4)
+
 ## [2026-04-25T14:17:15+08:00] - Wallpaper IndexedDB Recovery
 
 - js/settings.js L60 -> L60 (+1 -1)

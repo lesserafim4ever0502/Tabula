@@ -63,10 +63,25 @@ const TabulaSearch = (function () {
   }
 
   // 关闭下拉面板
-  function hideDropdown() {
+  function hideDropdown(immediate = false) {
+    if (immediate) {
+      dropdownContainer.style.transition = 'none';
+    }
+
     dropdownContainer.classList.remove('active');
     dropdownContainer.innerHTML = '';
     selectedIndex = -1;
+
+    if (immediate) {
+      dropdownContainer.offsetHeight;
+      dropdownContainer.style.transition = '';
+    }
+  }
+
+  function prepareForNavigation() {
+    hideDropdown(true);
+    inputEl.blur();
+    document.body.classList.remove('is-searching');
   }
 
   // 防XSS简易转义
@@ -154,6 +169,7 @@ const TabulaSearch = (function () {
         ? window.TabulaSettings.getSearchPrefix() 
         : 'https://www.google.com/search?q=';
       
+      prepareForNavigation();
       window.location.href = enginePrefix + encodeURIComponent(q);
       return;
     }
@@ -192,7 +208,7 @@ const TabulaSearch = (function () {
         
         if (targets.length > 0) {
           targets.forEach(t => window.TabulaStorage.incrementFrequency(t.id));
-          document.body.classList.remove('is-searching');
+          prepareForNavigation();
           
           targets.forEach(t => {
             if (window.chrome && window.chrome.tabs && window.chrome.tabs.create) {
@@ -202,7 +218,6 @@ const TabulaSearch = (function () {
             }
           });
           inputEl.value = '';
-          hideDropdown();
           return;
         }
       }
@@ -215,7 +230,7 @@ const TabulaSearch = (function () {
       const targetBM = filteredBookmarks[targetIndex];
       
       await window.TabulaStorage.incrementFrequency(targetBM.id);
-      document.body.classList.remove('is-searching');
+      prepareForNavigation();
       window.location.href = targetBM.url;
     } else {
       // 没有任何匹配且未输入指令：静默处理或可在此提示
