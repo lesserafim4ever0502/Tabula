@@ -10,7 +10,10 @@
   <title>Tabula</title>
 </head>
 <body>
-  <!-- 背景层：用于渲染纯黑渐变或未来用户的壁纸 -->
+  <!-- 纯色过渡层：用于新建标签页首帧防闪烁 -->
+  <div class="bg-color-layer" id="bg-color-layer"></div>
+
+  <!-- 壁纸层：始终位于纯色层之上 -->
   <div class="wallpaper" id="bg-layer"></div>
 
   <!-- 中心搜索模块层 -->

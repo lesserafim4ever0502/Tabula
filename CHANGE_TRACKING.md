@@ -1,5 +1,26 @@
 # CHANGE_TRACKING.md
 
+## [2026-05-10T23:39:47+08:00] - Background Layer Separation
+
+- index.html L13 -> L13-16 (+4 -1)
+- css/style.css L11 -> L12 (+1 -0)
+- css/style.css L35-44 -> L36-55 (+13 -2)
+- css/style.css L77 -> L88 (+1 -1)
+- css/style.css total (+15 -4)
+- js/preload.js L7 -> L8 (+1 -0)
+- js/preload.js L26 -> L27 (+1 -1)
+- js/preload.js total (+2 -1)
+- js/settings.js L33 -> L33 (+1 -1)
+- js/settings.js L121-123 -> L122-130 (+7 -1)
+- js/settings.js L132-162 -> L138-164 (+2 -6)
+- js/settings.js L195 -> L197 (+1 -1)
+- js/settings.js L276 -> removed (+0 -1)
+- js/settings.js L553 -> L555 (+1 -0)
+- js/settings.js total (+11 -9)
+- CODEMAP.md L20 -> L21 (+1 -0)
+- docs/CODEMAP.md L39-40 -> L39-40 (+2 -2)
+- docs/CODEMAP.md L45 -> L46-49 (+4 -0)
+
 ## [2026-05-10T18:29:18+08:00] - Search Submit Dropdown Flash Fix
 
 - js/search.js L66-69 -> L66-79 (+14 -1)

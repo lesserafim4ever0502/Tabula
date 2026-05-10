@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   - Incrementally updates access frequency for all opened items.
 
 ### Changed
+- **Background Layer Model**: Split the solid layer color from the wallpaper layer so layer color remains editable without clearing or covering an uploaded wallpaper.
 - **UI Decoupling**: Replaced all hardcoded Emoji icons (📌, ✕) with vector drawings.
 - **Storage Defaults**: Updated `TabulaStorage.add` to use `i-bookmark` as the default identifier.
 - **Visual Polish**: Replaced character-based close buttons in `index.html` with vector counterparts.

@@ -18,6 +18,7 @@ graph TD
 - **Context**: Centered search box with adaptive background blurring.
 - **Variables**: `--search-top`, `--search-left`, `--glass-blur`, `--wallpaper-blur`.
 - **Transitions**: Smooth layout initialization via `preload.js` to prevent FOUC.
+- **Background Layers**: `#bg-color-layer` owns the solid transition color, while `#bg-layer` owns only wallpaper imagery above it.
 
 ### 2. Tabula Icon Engine (v3.0)
 - **Tech Stack**: CSS Masks + Multi-browser compatible inline SVGs.

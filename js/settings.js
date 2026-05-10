@@ -30,7 +30,7 @@ const TabulaSettings = (function () {
   // ---- UI Elements ----
   let modalOverlay, btnOpen, btnClose;
   let engineBtns, colorPicker, btnUpload, inputFile, btnReset;
-  let bgLayer;
+  let colorLayer, bgLayer;
   let customEngineWrapper, customEngineInput;
 
   async function loadConfig() {
@@ -119,8 +119,15 @@ const TabulaSettings = (function () {
 
   async function applyBackground() {
     console.log("[Tabula] Applying background style... Image:", !!config.bgImage, "Color:", config.bgColor);
+
+    const layerColor = config.bgColor || '#0f0f11';
+    document.documentElement.style.backgroundColor = layerColor;
+    document.documentElement.style.setProperty('--init-bg-color', layerColor);
+    if (colorLayer) {
+      colorLayer.style.backgroundColor = layerColor;
+    }
     
-    // 强制重置背景，消除默认样式的残留干扰
+    // 强制重置壁纸层，纯色层由 colorLayer 独立承载
     bgLayer.style.background = 'none';
     bgLayer.style.backgroundImage = 'none';
     bgLayer.style.backgroundColor = 'transparent';
@@ -129,8 +136,6 @@ const TabulaSettings = (function () {
       bgLayer.style.backgroundPosition = 'center center';
       bgLayer.style.backgroundSize = 'cover';
       bgLayer.style.backgroundRepeat = 'no-repeat';
-      // 瞬时应用配置中的采样色
-      bgLayer.style.backgroundColor = config.bgColor || '#0f0f11';
 
       if (config.bgImage === 'indexeddb:wallpaper') {
         const blob = await getWallpaperBlob();
@@ -148,8 +153,6 @@ const TabulaSettings = (function () {
           if (thumb) {
             bgLayer.style.backgroundImage = `url(${thumb})`;
             bgLayer.classList.add('wallpaper-fade');
-          } else {
-            bgLayer.style.backgroundColor = config.bgColor;
           }
         }
       } else {
@@ -159,7 +162,6 @@ const TabulaSettings = (function () {
       }
     } else {
       console.log("[Tabula] Solid color mode activated.");
-      bgLayer.style.backgroundColor = config.bgColor;
       bgLayer.style.backgroundImage = 'none';
       bgLayer.style.filter = '';
       bgLayer.classList.remove('wallpaper-fade');
@@ -192,7 +194,7 @@ const TabulaSettings = (function () {
     
     // 额外强制刷新：针对部分 Chromium 版本的渲染抑制
     if (bgLayer) {
-      bgLayer.style.zIndex = '1';
+      bgLayer.style.zIndex = '2';
     }
   }
 
@@ -273,7 +275,6 @@ const TabulaSettings = (function () {
     // Handle Color Change
     colorPicker.addEventListener('input', async (e) => {
       config.bgColor = e.target.value;
-      config.bgImage = null;
       await applyBackground();
     });
     colorPicker.addEventListener('change', async () => {
@@ -551,6 +552,7 @@ const TabulaSettings = (function () {
       btnDeleteWallpaper = document.getElementById('btn-delete-wallpaper');
       inputFile = document.getElementById('wallpaper-file');
       btnReset = document.getElementById('btn-reset-bg');
+      colorLayer = document.getElementById('bg-color-layer');
       bgLayer = document.getElementById('bg-layer');
       customEngineWrapper = document.getElementById('custom-engine-wrapper');
       customEngineInput = document.getElementById('custom-engine-url');

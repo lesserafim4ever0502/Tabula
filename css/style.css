@@ -9,6 +9,7 @@ html {
   --search-backdrop-blur: 20px;
   
   /* 壁纸基础视觉变量 */
+  --init-bg-color: #0f0f11;
   --wp-base-blur: 0px;
   --wp-brightness: 1.0;
 
@@ -32,16 +33,26 @@ body {
   color: var(--color-text-primary);
 }
 
-/* 1. 壁纸层：位于最底层，始终铺满 */
+/* 1. 纯色过渡层：位于壁纸下方，承担首帧防闪烁 */
+.bg-color-layer,
 .wallpaper {
   position: absolute;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
+}
+
+.bg-color-layer {
   z-index: 1;
+  background: var(--init-bg-color, #0f0f11);
+}
+
+/* 2. 壁纸层：位于纯色层之上，未上传壁纸时保持透明 */
+.wallpaper {
+  z-index: 2;
   /* 基础背景：优先加载微缩缩略图以实现无感秒开 */
-  background: var(--init-bg-thumb, var(--init-bg, radial-gradient(circle at 50% -20%, #1f222e 0%, #08080a 70%, #000000 100%)));
+  background: var(--init-bg-thumb, var(--init-bg, none));
   /* 基础滤镜：受全局变量驱动的常态背景 */
   filter: brightness(var(--wp-brightness)) blur(var(--wp-base-blur));
   will-change: filter, opacity, transform;
@@ -74,7 +85,7 @@ body.is-searching .wallpaper {
   transform: scale(1.03) !important;
 }
 
-/* 2. 中心对齐容器：包裹搜索框与后续搜索列表 */
+/* 3. 中心对齐容器：包裹搜索框与后续搜索列表 */
 .center-container {
   position: relative;
   z-index: 10;

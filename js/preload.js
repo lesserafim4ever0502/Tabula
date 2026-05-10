@@ -5,6 +5,7 @@
   try {
     var col = localStorage.getItem('tabula_bgColor') || '#0f0f11';
     document.documentElement.style.backgroundColor = col;
+    document.documentElement.style.setProperty('--init-bg-color', col);
     
     var bg = localStorage.getItem('tabula_bgImage');
     var thumb = localStorage.getItem('tabula_bgThumb');
@@ -23,7 +24,7 @@
     if (bgVal !== 'none') {
       document.documentElement.style.setProperty('--init-bg', bgVal);
     } else {
-      document.documentElement.style.setProperty('--init-bg', col);
+      document.documentElement.style.setProperty('--init-bg', 'none');
     }
 
     // ==== NEW Phase 2.9: 搜索框视觉参数首帧注入 (瞬时吸附) ====
