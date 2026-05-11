@@ -48,6 +48,55 @@ const TabulaStorage = (function () {
     return 'id_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 5);
   }
 
+  function normalizeBookmark(bm) {
+    return {
+      ...bm,
+      frequency: Number.isFinite(bm.frequency) ? bm.frequency : 0,
+      createdAt: bm.createdAt || Date.now(),
+      lastUsedAt: bm.lastUsedAt || 0
+    };
+  }
+
+  function rankBookmarks(a, b) {
+    if ((b.lastUsedAt || 0) !== (a.lastUsedAt || 0)) {
+      return (b.lastUsedAt || 0) - (a.lastUsedAt || 0);
+    }
+    if ((b.frequency || 0) !== (a.frequency || 0)) {
+      return (b.frequency || 0) - (a.frequency || 0);
+    }
+    return (b.createdAt || 0) - (a.createdAt || 0);
+  }
+
+  function normalizeUrlKey(url) {
+    try {
+      const parsed = new URL(url);
+      parsed.hash = '';
+      return parsed.href.replace(/\/$/, '').toLowerCase();
+    } catch (e) {
+      return String(url || '').trim().toLowerCase();
+    }
+  }
+
+  function isValidHttpUrl(url) {
+    try {
+      const parsed = new URL(url);
+      return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function collectDuplicates(list, getKey) {
+    const groups = new Map();
+    list.forEach((bm) => {
+      const key = getKey(bm);
+      if (!key) return;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(bm);
+    });
+    return Array.from(groups.values()).filter(group => group.length > 1);
+  }
+
   // ==== 对外暴露的 API ====
 
   return {
@@ -58,6 +107,12 @@ const TabulaStorage = (function () {
       const data = await core.get();
       if (!data) {
         await core.set([]);
+        return;
+      }
+      const normalized = data.map(normalizeBookmark);
+      const needsMigration = JSON.stringify(data) !== JSON.stringify(normalized);
+      if (needsMigration) {
+        await core.set(normalized);
       }
     },
 
@@ -67,8 +122,7 @@ const TabulaStorage = (function () {
      */
     async getAll() {
       const list = await core.get();
-      // 高频优先
-      return list.sort((a, b) => b.frequency - a.frequency);
+      return list.map(normalizeBookmark).sort(rankBookmarks);
     },
 
     /**
@@ -83,7 +137,8 @@ const TabulaStorage = (function () {
         icon,
         alias,
         frequency: 0,
-        createdAt: Date.now()
+        createdAt: Date.now(),
+        lastUsedAt: 0
       };
       all.unshift(newBM);
       await core.set(all);
@@ -99,6 +154,7 @@ const TabulaStorage = (function () {
       const index = list.findIndex(b => b.id === id);
       if (index !== -1) {
         list[index].frequency += 1;
+        list[index].lastUsedAt = Date.now();
         await core.set(list);
       }
     },
@@ -141,6 +197,17 @@ const TabulaStorage = (function () {
         list[index] = { ...list[index], ...updatesObj };
         await core.set(list);
       }
+    },
+
+    async healthCheck() {
+      const all = (await core.get()).map(normalizeBookmark);
+      return {
+        total: all.length,
+        invalidUrls: all.filter(bm => !isValidHttpUrl(bm.url)),
+        missingTitles: all.filter(bm => !String(bm.title || '').trim()),
+        duplicateUrls: collectDuplicates(all, bm => normalizeUrlKey(bm.url)),
+        duplicateAliases: collectDuplicates(all, bm => String(bm.alias || '').trim().toLowerCase())
+      };
     },
 
     /**
@@ -233,7 +300,8 @@ const TabulaStorage = (function () {
             icon: icon,
             alias: alias,
             frequency: isNaN(freq) ? 0 : freq,
-            createdAt: createdAt
+            createdAt: createdAt,
+            lastUsedAt: 0
           });
         }
         

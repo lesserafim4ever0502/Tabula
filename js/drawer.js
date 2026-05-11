@@ -6,6 +6,7 @@ const TabulaDrawer = (function () {
   const listContainer = document.getElementById('drawer-list-container');
   const btnAddNew = document.getElementById('btn-add-new');
   const btnExport = document.getElementById('btn-export');
+  const btnHealthCheck = document.getElementById('btn-health-check');
   const importFile = document.getElementById('import-file');
   
   // 核心状态：当前是否有打开的编辑器
@@ -14,6 +15,7 @@ const TabulaDrawer = (function () {
   let isOpen = false;
   let focusedIndex = -1; // 记录键盘聚焦选中的卡片索引
   let currentRenderedList = []; // 记录当前过滤后渲染的数组
+  let healthMode = false;
   const searchInputDrawer = document.getElementById('drawer-search-input');
 
   // 统一图标渲染引擎：支持矢量图标、Emoji 及用户自定义上传图片（Base64）
@@ -70,6 +72,7 @@ const TabulaDrawer = (function () {
       searchInputDrawer.value = '';
     }
     focusedIndex = -1;
+    healthMode = false;
     renderList();
   }
 
@@ -78,6 +81,7 @@ const TabulaDrawer = (function () {
     drawerEl.classList.remove('open');
     editingId = null;
     focusedIndex = -1;
+    healthMode = false;
   }
 
   // 组件滚动对齐
@@ -91,6 +95,11 @@ const TabulaDrawer = (function () {
   // ==== 数据与视图渲染 ====
 
   async function renderList(query) {
+    if (healthMode) {
+      await renderHealthReport();
+      return;
+    }
+
     // 核心修复：若点击编辑/保存等动作未传参，自动从搜索框 DOM 实时同步当前的过滤关键词
     const activeQuery = query !== undefined ? query : (searchInputDrawer ? searchInputDrawer.value.trim() : '');
     
@@ -114,10 +123,10 @@ const TabulaDrawer = (function () {
         if (isTitleMatch || isAliasMatch) score = 2;
         else if (isUrlMatch) score = 1;
 
-        return { ...bm, score };
+      return { ...bm, score };
       })
       .filter(bm => bm.score > 0)
-      .sort((a, b) => b.score - a.score);
+      .sort(compareBookmarkRank);
     }
 
     // 编辑中的书签如果属于“新建并置顶”场景，则始终强制置顶
@@ -179,7 +188,7 @@ const TabulaDrawer = (function () {
                ${bm.alias ? `<span class="bm-alias-badge">${escapeHTML(bm.alias)}</span>` : ''}
             </div>
           </div>
-          <span class="bm-freq">★ ${bm.frequency}</span>
+          <span class="bm-freq">★ ${bm.frequency}${bm.lastUsedAt ? ' · Recent' : ''}</span>
           <button class="icon-btn edit-icon action-edit" title="Edit">✎</button>
         </div>
       `;
@@ -191,6 +200,73 @@ const TabulaDrawer = (function () {
 
   function escapeHTML(str) {
     return str.replace(/[&<>'"]/g, tag => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[tag] || tag));
+  }
+
+  function compareBookmarkRank(a, b) {
+    if ((b.score || 0) !== (a.score || 0)) return (b.score || 0) - (a.score || 0);
+    if ((b.lastUsedAt || 0) !== (a.lastUsedAt || 0)) {
+      return (b.lastUsedAt || 0) - (a.lastUsedAt || 0);
+    }
+    return (b.frequency || 0) - (a.frequency || 0);
+  }
+
+  function renderIssueGroup(title, items, formatter) {
+    if (!items.length) return '';
+    return `
+      <section class="health-group">
+        <h3>${escapeHTML(title)} <span>${items.length}</span></h3>
+        ${items.map(formatter).join('')}
+      </section>
+    `;
+  }
+
+  function renderBookmarkIssue(bm) {
+    return `
+      <div class="health-item">
+        <strong>${escapeHTML(bm.title || 'Untitled Bookmark')}</strong>
+        <span>${escapeHTML(bm.url || 'Missing URL')}</span>
+      </div>
+    `;
+  }
+
+  function renderDuplicateGroup(group) {
+    return `
+      <div class="health-item">
+        ${group.map(bm => `<strong>${escapeHTML(bm.title || 'Untitled Bookmark')}</strong>`).join('')}
+        <span>${group.map(bm => escapeHTML(bm.url || 'Missing URL')).join(' | ')}</span>
+      </div>
+    `;
+  }
+
+  async function renderHealthReport() {
+    const report = await window.TabulaStorage.healthCheck();
+    const issueCount = report.invalidUrls.length + report.missingTitles.length + report.duplicateUrls.length + report.duplicateAliases.length;
+    focusedIndex = -1;
+    currentRenderedList = [];
+
+    listContainer.innerHTML = `
+      <div class="health-report">
+        <div class="health-summary ${issueCount === 0 ? 'is-clean' : ''}">
+          <div>
+            <strong>${issueCount === 0 ? 'All bookmarks look healthy.' : `${issueCount} issue groups found.`}</strong>
+            <span>${report.total} bookmarks checked locally.</span>
+          </div>
+          <button class="btn-sm action-health-back">Back</button>
+        </div>
+        ${renderIssueGroup('Invalid URLs', report.invalidUrls, renderBookmarkIssue)}
+        ${renderIssueGroup('Missing Titles', report.missingTitles, renderBookmarkIssue)}
+        ${renderIssueGroup('Duplicate URLs', report.duplicateUrls, renderDuplicateGroup)}
+        ${renderIssueGroup('Duplicate Aliases', report.duplicateAliases, renderDuplicateGroup)}
+      </div>
+    `;
+
+    const backBtn = listContainer.querySelector('.action-health-back');
+    if (backBtn) {
+      backBtn.addEventListener('click', () => {
+        healthMode = false;
+        renderList(searchInputDrawer ? searchInputDrawer.value.trim() : '');
+      });
+    }
   }
 
   // ==== 列表内的事件代理委托 ====
@@ -339,6 +415,7 @@ const TabulaDrawer = (function () {
       // Drawer 本地搜索框绑定
       if (searchInputDrawer) {
         searchInputDrawer.addEventListener('input', (e) => {
+          healthMode = false;
           focusedIndex = -1;
           renderList(e.target.value.trim());
         });
@@ -455,6 +532,13 @@ const TabulaDrawer = (function () {
 
       if (btnExport) {
         btnExport.addEventListener('click', handleExport);
+      }
+
+      if (btnHealthCheck) {
+        btnHealthCheck.addEventListener('click', () => {
+          healthMode = true;
+          renderHealthReport();
+        });
       }
 
       const realBtnImport = document.getElementById('btn-import');

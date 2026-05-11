@@ -1,5 +1,48 @@
 # CHANGE_TRACKING.md
 
+## [2026-05-11T12:06:22+08:00] - Drawer Action Button Visual Distinction
+
+- index.html L48 -> L49 (+0 -1 inline style removed)
+- css/style.css L384 -> L385-420 (+36 -0)
+- css/style.css L386 -> L422 (+1 -1)
+- css/style.css L388 -> L424 (+1 -1)
+- css/style.css L392 -> L429-430 (+2 -0)
+- CHANGELOG.md L23 -> L23 (+1 -0)
+
+## [2026-05-11T11:50:12+08:00] - Bookmark Health Check & Recent Ranking
+
+- index.html L44 -> L45 (+1 -0)
+- js/storage.js L50 -> L51-99 (+49 -0)
+- js/storage.js L60 -> L110-115 (+6 -0)
+- js/storage.js L70-71 -> L125 (+1 -2)
+- js/storage.js L86 -> L140-141 (+2 -1)
+- js/storage.js L101 -> L157 (+1 -0)
+- js/storage.js L145 -> L202-212 (+11 -0)
+- js/storage.js L236 -> L303-304 (+2 -1)
+- js/storage.js total (+72 -4)
+- js/search.js L16 -> L17-24 (+8 -0)
+- js/search.js L143-148 -> L151 (+1 -6)
+- js/search.js L199-202 -> L202 (+1 -4)
+- js/search.js total (+10 -10)
+- js/drawer.js L8 -> L9 (+1 -0)
+- js/drawer.js L16 -> L18 (+1 -0)
+- js/drawer.js L72 -> L75 (+1 -0)
+- js/drawer.js L80 -> L84 (+1 -0)
+- js/drawer.js L93 -> L98-102 (+5 -0)
+- js/drawer.js L117 -> L126 (+0 -0)
+- js/drawer.js L120 -> L129 (+1 -1)
+- js/drawer.js L182 -> L191 (+1 -1)
+- js/drawer.js L195 -> L205-271 (+67 -0)
+- js/drawer.js L341 -> L418 (+1 -0)
+- js/drawer.js L459 -> L537-543 (+7 -0)
+- js/drawer.js total (+87 -3)
+- css/style.css L358 -> L358 (+1 -1)
+- css/style.css L691 -> L692-765 (+74 -0)
+- css/style.css L1270 -> L1345-1350 (+6 -0)
+- css/style.css total (+81 -1)
+- CHANGELOG.md L9 -> L9-10 (+2 -0)
+- CHANGELOG.md L23 -> L25-26 (+2 -0)
+
 ## [2026-05-10T23:39:47+08:00] - Background Layer Separation
 
 - index.html L13 -> L13-16 (+4 -1)

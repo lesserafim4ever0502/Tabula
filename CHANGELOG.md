@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- **Bookmark Health Check**: Added a drawer-level health action that reports invalid URLs, missing titles, duplicate URLs, and duplicate aliases without external network calls.
+- **Recent Usage Ranking**: Added `lastUsedAt` bookmark metadata so recently opened bookmarks can rank ahead of older frequency ties.
 - **Vector Icon System (v3.0)**: Implemented a pure CSS/SVG icon infrastructure using CSS Masks.
   - New icons: `i-bookmark`, `i-folder`, `i-close`, `i-search`, `i-link`.
   - Shared `getIconHTML` engine in `search.js` & `drawer.js`.
@@ -17,6 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   - Incrementally updates access frequency for all opened items.
 
 ### Changed
+- **Drawer Action Visual Hierarchy**: Gave Health, Export, Import, and Clear distinct semantic color treatments.
+- **Bookmark Ranking**: Search results and drawer filtering now preserve match-score priority, then prefer recent usage before frequency.
+- **Drawer Actions Layout**: Expanded the drawer data action row to include the new Health action alongside Export, Import, and Clear.
 - **Background Layer Model**: Split the solid layer color from the wallpaper layer so layer color remains editable without clearing or covering an uploaded wallpaper.
 - **UI Decoupling**: Replaced all hardcoded Emoji icons (📌, ✕) with vector drawings.
 - **Storage Defaults**: Updated `TabulaStorage.add` to use `i-bookmark` as the default identifier.

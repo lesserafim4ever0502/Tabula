@@ -14,6 +14,14 @@ const TabulaSearch = (function () {
   let filteredBookmarks = [];
   let selectedIndex = -1; // -1 表示没选中，或者焦点还在 input 上
 
+  function compareBookmarkRank(a, b) {
+    if (a.score !== b.score) return b.score - a.score;
+    if ((b.lastUsedAt || 0) !== (a.lastUsedAt || 0)) {
+      return (b.lastUsedAt || 0) - (a.lastUsedAt || 0);
+    }
+    return (b.frequency || 0) - (a.frequency || 0);
+  }
+
   // 统一图标渲染引擎：支持系统矢量图标、用户 Emoji、及自定义上传图片（Base64）
   function getIconHTML(icon) {
     if (!icon || icon === '📌' || icon === 'i-bookmark') {
@@ -140,12 +148,7 @@ const TabulaSearch = (function () {
       return { ...bm, score };
     })
     .filter(bm => bm.score > 0)
-    .sort((a, b) => {
-      // 权重分级优先 (Level 2 > Level 1)
-      if (a.score !== b.score) return b.score - a.score;
-      // 同权重下，频次优先
-      return (b.frequency || 0) - (a.frequency || 0);
-    });
+    .sort(compareBookmarkRank);
 
     // 容错处理：当重新输入内容时，清空选择项状态以便给回车默认触发 Web 留后路
     if (e && e.key !== 'ArrowDown' && e.key !== 'ArrowUp') {
@@ -196,10 +199,7 @@ const TabulaSearch = (function () {
               score = 1;
             }
             return { ...bm, score };
-          }).filter(bm => bm.score > 0).sort((a, b) => {
-            if (a.score !== b.score) return b.score - a.score;
-            return (b.frequency || 0) - (a.frequency || 0);
-          });
+          }).filter(bm => bm.score > 0).sort(compareBookmarkRank);
           
           if (matchedBMs.length > 0) {
             targets.push(matchedBMs[0]);
