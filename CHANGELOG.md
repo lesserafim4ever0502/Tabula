@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- **Odin Local Sync**: Added a Data & Backup action that syncs Tabula bookmarks and aliases to Odin through the local `127.0.0.1:29000` API.
 - **Bookmark Health Check**: Added a drawer-level health action that reports invalid URLs, missing titles, duplicate URLs, and duplicate aliases without external network calls.
 - **Recent Usage Ranking**: Added `lastUsedAt` bookmark metadata so recently opened bookmarks can rank ahead of older frequency ties.
 - **Vector Icon System (v3.0)**: Implemented a pure CSS/SVG icon infrastructure using CSS Masks.
@@ -19,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   - Incrementally updates access frequency for all opened items.
 
 ### Changed
+- **Extension Local API Permission**: Added localhost host permissions and CSP `connect-src` entries required for Odin-only local sync.
 - **Drawer Action Visual Hierarchy**: Gave Health, Export, Import, and Clear distinct semantic color treatments.
 - **Bookmark Ranking**: Search results and drawer filtering now preserve match-score priority, then prefer recent usage before frequency.
 - **Drawer Actions Layout**: Expanded the drawer data action row to include the new Health action alongside Export, Import, and Clear.

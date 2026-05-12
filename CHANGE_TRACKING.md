@@ -1,5 +1,17 @@
 # CHANGE_TRACKING.md
 
+## [2026-05-11T23:39:18+08:00] - Odin Local Bookmark Sync
+
+- manifest.json L1-21 -> L1-25 (+5 -1)
+- index.html L1-204 -> L1-206 (+2 -0)
+- css/style.css L1-1411 -> L1-1439 (+29 -1)
+- js/settings.js L1-595 -> L1-661 (+66 -0)
+- README.md L1-35 -> L1-37 (+2 -0)
+- README-CN.md L1-35 -> L1-37 (+2 -0)
+- CODEMAP.md L1-32 -> L1-33 (+1 -0)
+- CHANGELOG.md L1-59 -> L1-61 (+2 -0)
+- CHANGE_TRACKING.md L1-96 -> L1-108 (+12 -0)
+
 ## [2026-05-11T12:06:22+08:00] - Drawer Action Button Visual Distinction
 
 - index.html L48 -> L49 (+0 -1 inline style removed)

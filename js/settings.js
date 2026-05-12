@@ -470,7 +470,70 @@ const TabulaSettings = (function () {
     // ==== NEW Phase 2.9: Backup & Restore Event Binding ====
     const btnExport = document.getElementById('btn-export-backup');
     const btnImportTrigger = document.getElementById('btn-import-trigger');
+    const btnSyncOdin = document.getElementById('btn-sync-odin');
+    const odinSyncStatus = document.getElementById('odin-sync-status');
     const inputImport = document.getElementById('input-import-backup');
+
+    function setOdinSyncStatus(message, type = '') {
+      if (!odinSyncStatus) return;
+      odinSyncStatus.textContent = message;
+      odinSyncStatus.className = `sync-status ${type}`.trim();
+    }
+
+    async function syncToOdin() {
+      if (!btnSyncOdin) return;
+
+      btnSyncOdin.disabled = true;
+      setOdinSyncStatus('Syncing bookmarks to Odin...');
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 4000);
+
+      try {
+        const bookmarks = await window.TabulaStorage.getAll();
+        const payload = {
+          source: 'Tabula',
+          mode: 'merge',
+          bookmarks: bookmarks.map(bm => ({
+            title: bm.title || '',
+            url: bm.url || '',
+            alias: bm.alias || '',
+            frequency: bm.frequency || 0,
+            lastUsedAt: bm.lastUsedAt || 0
+          }))
+        };
+
+        const response = await fetch('http://127.0.0.1:29000/integrations/tabula/bookmarks/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          signal: controller.signal
+        });
+        const data = await response.json();
+        if (!response.ok || data.status !== 'success') {
+          throw new Error(data.message || 'Odin sync failed.');
+        }
+
+        const stats = data.data && data.data.stats ? data.data.stats : {};
+        setOdinSyncStatus(
+          `Synced: +${stats.addedBookmarks || 0} bookmarks, +${stats.addedAliases || 0} aliases. ` +
+          `Skipped ${stats.skippedDuplicateBookmarks || 0} duplicate bookmarks, ` +
+          `${stats.skippedConflictAliases || 0} alias conflicts, ${stats.invalidItems || 0} invalid items.`,
+          'success'
+        );
+      } catch (err) {
+        const isAbort = err && err.name === 'AbortError';
+        setOdinSyncStatus(
+          isAbort
+            ? 'Odin sync timed out. Please make sure Odin is running.'
+            : 'Odin is not running or the local sync API is unreachable.',
+          'error'
+        );
+      } finally {
+        clearTimeout(timeoutId);
+        btnSyncOdin.disabled = false;
+      }
+    }
 
     btnExport.addEventListener('click', async () => {
       const bookmarks = await window.TabulaStorage.getAll();
@@ -490,6 +553,9 @@ const TabulaSettings = (function () {
     });
 
     btnImportTrigger.addEventListener('click', () => inputImport.click());
+    if (btnSyncOdin) {
+      btnSyncOdin.addEventListener('click', syncToOdin);
+    }
 
     inputImport.addEventListener('change', async (e) => {
       const file = e.target.files[0];

@@ -1074,7 +1074,7 @@ body.is-searching .search-box-wrapper {
 
 .action-buttons-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 12px;
   margin-top: 4px;
 }
@@ -1089,6 +1089,34 @@ body.is-searching .search-box-wrapper {
   background: rgba(255, 255, 255, 0.08) !important;
   border-color: rgba(255, 255, 255, 0.2) !important;
   color: #fff !important;
+}
+
+.action-btn.odin-sync {
+  background: rgba(88, 101, 242, 0.12);
+  border-color: rgba(88, 101, 242, 0.3);
+  color: #c8d0ff;
+}
+
+.action-btn.odin-sync:hover {
+  background: rgba(88, 101, 242, 0.22);
+  border-color: rgba(160, 170, 255, 0.45);
+  color: #fff;
+}
+
+.sync-status {
+  min-height: 18px;
+  margin: 10px 0 0 0;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.sync-status.success {
+  color: #8ee8ad;
+}
+
+.sync-status.error {
+  color: #ff9aa7;
 }
 
 .setting-group label {
