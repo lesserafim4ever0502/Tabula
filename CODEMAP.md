@@ -29,5 +29,5 @@ graph TD
 
 - **js/search.js**: Handles command extraction (`/`), multi-term delimiter splitting (`,`), frequency-scored bookmark retrieval, and spatial-aware dropdown flipping.
 - **js/storage.js**: Adapts to `chrome.storage.local` with fallback to `localStorage`.
-- **js/settings.js**: Owns visual settings, backup/restore, and the local-only Odin bookmark sync action through `127.0.0.1:29000`. / 负责视觉设置、备份恢复，以及通过 `127.0.0.1:29000` 执行仅本机访问的 Odin 书签同步。
+- **js/settings.js**: Owns visual settings, backup/restore, and the local-only Odin bookmark sync action through `127.0.0.1:29000`, including status checks, dry-run preview, scoped sync payloads, and result details. / 负责视觉设置、备份恢复，以及通过 `127.0.0.1:29000` 执行仅本机访问的 Odin 书签同步，包括连接状态、预览、范围筛选和结果明细。
 - **js/drawer.js**: High-performance bookmark management & full data backup (Export/Import).

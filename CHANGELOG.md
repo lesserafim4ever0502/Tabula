@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- **Odin Sync Preview & Details**: Added Odin connection status, dry-run preview, result details, and selectable bookmark sync scopes in Settings → Data & Backup.
 - **Odin Local Sync**: Added a Data & Backup action that syncs Tabula bookmarks and aliases to Odin through the local `127.0.0.1:29000` API.
 - **Bookmark Health Check**: Added a drawer-level health action that reports invalid URLs, missing titles, duplicate URLs, and duplicate aliases without external network calls.
 - **Recent Usage Ranking**: Added `lastUsedAt` bookmark metadata so recently opened bookmarks can rank ahead of older frequency ties.
@@ -20,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   - Incrementally updates access frequency for all opened items.
 
 ### Changed
+- **Odin Sync Scope Picker**: Replaced the browser-native sync scope select with a custom animated glass-style dropdown to match the Settings UI.
 - **Extension Local API Permission**: Added localhost host permissions and CSP `connect-src` entries required for Odin-only local sync.
 - **Drawer Action Visual Hierarchy**: Gave Health, Export, Import, and Clear distinct semantic color treatments.
 - **Bookmark Ranking**: Search results and drawer filtering now preserve match-score priority, then prefer recent usage before frequency.
@@ -30,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - **Visual Polish**: Replaced character-based close buttons in `index.html` with vector counterparts.
 
 ### Fixed
+- **Odin Sync Scope Select Contrast**: Adjusted the sync scope dropdown for dark UI contrast so option text remains readable.
 - **Search Submit Flash**: Fixed a transient empty dropdown panel flashing above the search box when pressing Enter to open a bookmark or search target.
 - **Wallpaper IDB Recovery**: Fixed uploaded wallpapers flashing briefly on refresh and then being covered by a solid color when the preload cache resolved empty after Chrome reinstall or IndexedDB store loss.
 - **Platform Inconsistency**: Emojis now render identically across Windows/macOS/Linux via CSS drawings.

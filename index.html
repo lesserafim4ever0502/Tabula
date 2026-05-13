@@ -177,12 +177,34 @@
             <div class="setting-group backup-section">
               <label>Backup & Manage</label>
               <p class="section-desc">Export or import all your settings and bookmarks (JSON).</p>
+              <div class="odin-status-row" id="odin-status-row">
+                <span class="odin-status-dot"></span>
+                <span id="odin-connection-label">Odin status not checked</span>
+              </div>
+              <div class="sync-scope-row">
+                <span>Odin Sync Scope</span>
+                <div class="scope-select" id="odin-scope-select">
+                  <input type="hidden" id="odin-sync-scope" value="all">
+                  <button type="button" id="odin-scope-trigger" class="scope-select-trigger" aria-haspopup="listbox" aria-expanded="false">
+                    <span id="odin-scope-label">All bookmarks</span>
+                    <span class="scope-select-chevron"></span>
+                  </button>
+                  <div id="odin-scope-menu" class="scope-select-menu" role="listbox" aria-label="Odin sync scope">
+                    <button type="button" class="scope-select-option active" role="option" aria-selected="true" data-value="all">All bookmarks</button>
+                    <button type="button" class="scope-select-option" role="option" aria-selected="false" data-value="alias">Bookmarks with alias</button>
+                    <button type="button" class="scope-select-option" role="option" aria-selected="false" data-value="recent">Used in last 30 days</button>
+                    <button type="button" class="scope-select-option" role="option" aria-selected="false" data-value="used">Used at least once</button>
+                  </div>
+                </div>
+              </div>
               <div class="action-buttons-grid">
                 <button id="btn-export-backup" class="action-btn">Export Backup</button>
                 <button id="btn-import-trigger" class="action-btn secondary">Import Backup</button>
+                <button id="btn-preview-odin" class="action-btn odin-preview">Preview Odin Sync</button>
                 <button id="btn-sync-odin" class="action-btn odin-sync">Sync to Odin</button>
               </div>
               <p id="odin-sync-status" class="sync-status" aria-live="polite"></p>
+              <div id="odin-sync-details" class="sync-details" aria-live="polite"></div>
               <input type="file" id="input-import-backup" style="display:none" accept=".json">
             </div>
           </div>

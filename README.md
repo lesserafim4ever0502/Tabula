@@ -16,7 +16,7 @@ A minimalist, **zero-latency**, **glassmorphism-styled** browser start page exte
     - Fuzzy matching logic based on Titles, URLs, and custom Aliases.
     - **Multi-bookmark Open**: Enter multiple terms separated by commas (e.g., `x,yt,bi`) to open the top results for each simultaneously.
 - **📂 Minimalist Manager**: A sleek right-side drawer for bookmark management with real-time search filtering.
-- **🔁 Local Odin Sync**: Syncs bookmarks and aliases to Odin through `http://127.0.0.1:29000` when Odin is running. This is a local-only integration and does not use internet services.
+- **🔁 Local Odin Sync**: Syncs bookmarks and aliases to Odin through `http://127.0.0.1:29000` when Odin is running. Includes connection status, dry-run preview, scoped sync choices, and result details. This is a local-only integration and does not use internet services.
 
 ## 📸 Recent Updates (v1.x)
 
@@ -30,7 +30,7 @@ A minimalist, **zero-latency**, **glassmorphism-styled** browser start page exte
 2. Enable "Developer Mode".
 3. Click "Load unpacked" and select the project root directory.
 4. Press `Ctrl/Cmd + ,` or click the bottom-left gear icon to enter Settings.
-5. To sync bookmarks to Odin, keep Odin running and use Settings → Data & Backup → Sync to Odin.
+5. To sync bookmarks to Odin, keep Odin running, open Settings → Data & Backup, choose a sync scope, preview the merge, then click Sync to Odin.
 
 ## 🏗️ Architecture
 

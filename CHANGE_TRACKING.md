@@ -1,5 +1,30 @@
 # CHANGE_TRACKING.md
 
+## [2026-05-13T09:23:21+08:00] - Custom Odin Sync Scope Picker
+
+- index.html L1-208 -> L1-215 (+7 -0)
+- css/style.css L1-1353 -> L1-1425 (+72 -0)
+- js/settings.js L1-703 -> L1-748 (+45 -0)
+- CHANGELOG.md L1-55 -> L1-56 (+1 -0)
+- CHANGE_TRACKING.md L1-116 -> L1-122 (+6 -0)
+
+## [2026-05-12T18:13:11+08:00] - Odin Sync Scope Dropdown Contrast
+
+- css/style.css L1-1347 -> L1-1353 (+6 -0)
+- CHANGELOG.md L1-54 -> L1-55 (+1 -0)
+- CHANGE_TRACKING.md L1-112 -> L1-116 (+4 -0)
+
+## [2026-05-12T18:04:06+08:00] - Odin Sync Preview, Details, and Scopes
+
+- index.html L1-193 -> L1-208 (+15 -0)
+- css/style.css L1-1263 -> L1-1347 (+99 -1)
+- js/settings.js L1-592 -> L1-703 (+152 -30)
+- README.md L1-28 -> L1-28 (+2 -2)
+- README-CN.md L1-28 -> L1-28 (+2 -2)
+- CODEMAP.md L1-26 -> L1-26 (+1 -1)
+- CHANGELOG.md L1-53 -> L1-54 (+1 -0)
+- CHANGE_TRACKING.md L1-103 -> L1-112 (+9 -0)
+
 ## [2026-05-11T23:39:18+08:00] - Odin Local Bookmark Sync
 
 - manifest.json L1-21 -> L1-25 (+5 -1)

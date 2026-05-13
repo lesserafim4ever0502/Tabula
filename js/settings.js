@@ -471,8 +471,18 @@ const TabulaSettings = (function () {
     const btnExport = document.getElementById('btn-export-backup');
     const btnImportTrigger = document.getElementById('btn-import-trigger');
     const btnSyncOdin = document.getElementById('btn-sync-odin');
+    const btnPreviewOdin = document.getElementById('btn-preview-odin');
+    const odinSyncScope = document.getElementById('odin-sync-scope');
+    const odinScopeSelect = document.getElementById('odin-scope-select');
+    const odinScopeTrigger = document.getElementById('odin-scope-trigger');
+    const odinScopeLabel = document.getElementById('odin-scope-label');
+    const odinScopeOptions = document.querySelectorAll('.scope-select-option');
     const odinSyncStatus = document.getElementById('odin-sync-status');
+    const odinSyncDetails = document.getElementById('odin-sync-details');
+    const odinStatusRow = document.getElementById('odin-status-row');
+    const odinConnectionLabel = document.getElementById('odin-connection-label');
     const inputImport = document.getElementById('input-import-backup');
+    const ODIN_BASE_URL = 'http://127.0.0.1:29000';
 
     function setOdinSyncStatus(message, type = '') {
       if (!odinSyncStatus) return;
@@ -480,49 +490,181 @@ const TabulaSettings = (function () {
       odinSyncStatus.className = `sync-status ${type}`.trim();
     }
 
-    async function syncToOdin() {
-      if (!btnSyncOdin) return;
+    function setOdinConnectionStatus(state, message) {
+      if (!odinStatusRow || !odinConnectionLabel) return;
+      odinStatusRow.className = `odin-status-row ${state}`.trim();
+      odinConnectionLabel.textContent = message;
+    }
 
-      btnSyncOdin.disabled = true;
-      setOdinSyncStatus('Syncing bookmarks to Odin...');
+    function escapeHTML(str) {
+      return window.TabulaStorage._escapeHTML(str);
+    }
 
+    function setOdinDetails(details) {
+      if (!odinSyncDetails) return;
+      const groups = [
+        ['Added bookmarks', details.addedBookmarks],
+        ['Skipped duplicate bookmarks', details.skippedDuplicateBookmarks],
+        ['Added aliases', details.addedAliases],
+        ['Skipped alias conflicts', details.skippedConflictAliases],
+        ['Invalid items', details.invalidItems]
+      ].filter(([, items]) => Array.isArray(items) && items.length > 0);
+
+      if (groups.length === 0) {
+        odinSyncDetails.classList.remove('active');
+        odinSyncDetails.innerHTML = '';
+        return;
+      }
+
+      odinSyncDetails.innerHTML = groups.map(([title, items]) => {
+        const visible = items.slice(0, 6).map(item => `<li>${escapeHTML(item)}</li>`).join('');
+        const more = items.length > 6 ? `<li>${items.length - 6} more...</li>` : '';
+        return `<strong>${escapeHTML(title)}</strong><ul>${visible}${more}</ul>`;
+      }).join('');
+      odinSyncDetails.classList.add('active');
+    }
+
+    function clearOdinDetails() {
+      setOdinDetails({});
+    }
+
+    function getSyncScopeLabel() {
+      const scope = odinSyncScope ? odinSyncScope.value : 'all';
+      const labels = {
+        all: 'All bookmarks',
+        alias: 'Bookmarks with alias',
+        recent: 'Used in last 30 days',
+        used: 'Used at least once'
+      };
+      return labels[scope] || scope;
+    }
+
+    function filterBookmarksForOdin(bookmarks) {
+      const scope = odinSyncScope ? odinSyncScope.value : 'all';
+      const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+      if (scope === 'alias') {
+        return bookmarks.filter(bm => String(bm.alias || '').trim());
+      }
+      if (scope === 'recent') {
+        return bookmarks.filter(bm => (bm.lastUsedAt || 0) >= thirtyDaysAgo);
+      }
+      if (scope === 'used') {
+        return bookmarks.filter(bm => (bm.frequency || 0) > 0 || (bm.lastUsedAt || 0) > 0);
+      }
+      return bookmarks;
+    }
+
+    async function fetchOdin(path, options = {}, timeoutMs = 4000) {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 4000);
-
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
       try {
-        const bookmarks = await window.TabulaStorage.getAll();
-        const payload = {
-          source: 'Tabula',
-          mode: 'merge',
-          bookmarks: bookmarks.map(bm => ({
-            title: bm.title || '',
-            url: bm.url || '',
-            alias: bm.alias || '',
-            frequency: bm.frequency || 0,
-            lastUsedAt: bm.lastUsedAt || 0
-          }))
-        };
-
-        const response = await fetch('http://127.0.0.1:29000/integrations/tabula/bookmarks/sync', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
+        const response = await fetch(`${ODIN_BASE_URL}${path}`, {
+          ...options,
           signal: controller.signal
         });
         const data = await response.json();
         if (!response.ok || data.status !== 'success') {
-          throw new Error(data.message || 'Odin sync failed.');
+          throw new Error(data.message || 'Odin request failed.');
+        }
+        return data;
+      } finally {
+        clearTimeout(timeoutId);
+      }
+    }
+
+    async function checkOdinStatus() {
+      setOdinConnectionStatus('', 'Checking Odin...');
+      try {
+        await fetchOdin('/ping', { method: 'GET' }, 1800);
+        setOdinConnectionStatus('connected', 'Odin connected on 127.0.0.1:29000');
+        return true;
+      } catch (err) {
+        setOdinConnectionStatus('offline', 'Odin is not running or the local API is unreachable');
+        return false;
+      }
+    }
+
+    async function buildOdinPayload(dryRun) {
+      const allBookmarks = await window.TabulaStorage.getAll();
+      const scopedBookmarks = filterBookmarksForOdin(allBookmarks);
+      return {
+        source: 'Tabula',
+        mode: 'merge',
+        dryRun,
+        bookmarks: scopedBookmarks.map(bm => ({
+          title: bm.title || '',
+          url: bm.url || '',
+          alias: bm.alias || '',
+          frequency: bm.frequency || 0,
+          lastUsedAt: bm.lastUsedAt || 0
+        })),
+        totalBookmarks: allBookmarks.length,
+        scopedBookmarks: scopedBookmarks.length
+      };
+    }
+
+    function formatOdinStats(stats, actionLabel, scopedCount) {
+      return `${actionLabel} (${getSyncScopeLabel()}, ${scopedCount} selected): ` +
+        `+${stats.addedBookmarks || 0} bookmarks, +${stats.addedAliases || 0} aliases. ` +
+        `Skipped ${stats.skippedDuplicateBookmarks || 0} duplicate bookmarks, ` +
+        `${stats.skippedConflictAliases || 0} alias conflicts, ${stats.invalidItems || 0} invalid items.`;
+    }
+
+    function setScopeSelectOpen(open) {
+      if (!odinScopeSelect || !odinScopeTrigger) return;
+      odinScopeSelect.classList.toggle('open', open);
+      odinScopeTrigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+
+    function setOdinSyncScope(value) {
+      if (!odinSyncScope) return;
+      odinSyncScope.value = value;
+      if (odinScopeLabel) {
+        odinScopeLabel.textContent = getSyncScopeLabel();
+      }
+      odinScopeOptions.forEach(option => {
+        const isActive = option.dataset.value === value;
+        option.classList.toggle('active', isActive);
+        option.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      });
+      clearOdinDetails();
+      setOdinSyncStatus(`Scope changed to ${getSyncScopeLabel()}. Preview before syncing for exact counts.`);
+    }
+
+    async function runOdinSync(dryRun) {
+      const activeButton = dryRun ? btnPreviewOdin : btnSyncOdin;
+      if (!activeButton) return;
+
+      activeButton.disabled = true;
+      if (btnPreviewOdin && !dryRun) btnPreviewOdin.disabled = true;
+      if (btnSyncOdin && dryRun) btnSyncOdin.disabled = true;
+      clearOdinDetails();
+      setOdinSyncStatus(dryRun ? 'Previewing Odin sync...' : 'Syncing bookmarks to Odin...');
+
+      try {
+        const payload = await buildOdinPayload(dryRun);
+        if (payload.scopedBookmarks === 0) {
+          setOdinSyncStatus(`No bookmarks match the selected scope: ${getSyncScopeLabel()}.`, 'error');
+          return;
         }
 
+        const data = await fetchOdin('/integrations/tabula/bookmarks/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
         const stats = data.data && data.data.stats ? data.data.stats : {};
+        const details = data.data && data.data.details ? data.data.details : {};
+        setOdinConnectionStatus('connected', 'Odin connected on 127.0.0.1:29000');
         setOdinSyncStatus(
-          `Synced: +${stats.addedBookmarks || 0} bookmarks, +${stats.addedAliases || 0} aliases. ` +
-          `Skipped ${stats.skippedDuplicateBookmarks || 0} duplicate bookmarks, ` +
-          `${stats.skippedConflictAliases || 0} alias conflicts, ${stats.invalidItems || 0} invalid items.`,
+          formatOdinStats(stats, dryRun ? 'Preview' : 'Synced', payload.scopedBookmarks),
           'success'
         );
+        setOdinDetails(details);
       } catch (err) {
         const isAbort = err && err.name === 'AbortError';
+        setOdinConnectionStatus('offline', 'Odin is not running or the local API is unreachable');
         setOdinSyncStatus(
           isAbort
             ? 'Odin sync timed out. Please make sure Odin is running.'
@@ -530,8 +672,8 @@ const TabulaSettings = (function () {
           'error'
         );
       } finally {
-        clearTimeout(timeoutId);
-        btnSyncOdin.disabled = false;
+        if (btnPreviewOdin) btnPreviewOdin.disabled = false;
+        if (btnSyncOdin) btnSyncOdin.disabled = false;
       }
     }
 
@@ -553,9 +695,36 @@ const TabulaSettings = (function () {
     });
 
     btnImportTrigger.addEventListener('click', () => inputImport.click());
-    if (btnSyncOdin) {
-      btnSyncOdin.addEventListener('click', syncToOdin);
+    if (btnPreviewOdin) {
+      btnPreviewOdin.addEventListener('click', () => runOdinSync(true));
     }
+    if (btnSyncOdin) {
+      btnSyncOdin.addEventListener('click', () => runOdinSync(false));
+    }
+    if (odinScopeTrigger && odinScopeSelect) {
+      odinScopeTrigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        setScopeSelectOpen(!odinScopeSelect.classList.contains('open'));
+      });
+      odinScopeOptions.forEach(option => {
+        option.addEventListener('click', (e) => {
+          e.stopPropagation();
+          setOdinSyncScope(option.dataset.value || 'all');
+          setScopeSelectOpen(false);
+        });
+      });
+      document.addEventListener('click', (e) => {
+        if (!odinScopeSelect.contains(e.target)) {
+          setScopeSelectOpen(false);
+        }
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          setScopeSelectOpen(false);
+        }
+      });
+    }
+    checkOdinStatus();
 
     inputImport.addEventListener('change', async (e) => {
       const file = e.target.files[0];
