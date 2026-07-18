@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- **Space Recommendations & Ctrl Shortcuts**: Added frequency-ranked empty-input Space recommendations and `Ctrl+1` through `Ctrl+3` quick opening for visible bookmark results.
 - **Odin Sync Preview & Details**: Added Odin connection status, dry-run preview, result details, and selectable bookmark sync scopes in Settings → Data & Backup.
 - **Odin Local Sync**: Added a Data & Backup action that syncs Tabula bookmarks and aliases to Odin through the local `127.0.0.1:29000` API.
 - **Bookmark Health Check**: Added a drawer-level health action that reports invalid URLs, missing titles, duplicate URLs, and duplicate aliases without external network calls.
@@ -32,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - **Visual Polish**: Replaced character-based close buttons in `index.html` with vector counterparts.
 
 ### Fixed
+- **Navigation Flash Surface**: Hard-hidden the search box and bookmark dropdown before same-tab navigation so no empty white or glass rectangle can flash during handoff.
 - **Odin Sync Scope Select Contrast**: Adjusted the sync scope dropdown for dark UI contrast so option text remains readable.
 - **Search Submit Flash**: Fixed a transient empty dropdown panel flashing above the search box when pressing Enter to open a bookmark or search target.
 - **Wallpaper IDB Recovery**: Fixed uploaded wallpapers flashing briefly on refresh and then being covered by a solid color when the preload cache resolved empty after Chrome reinstall or IndexedDB store loss.

@@ -1,5 +1,24 @@
 # CHANGE_TRACKING.md
 
+## [2026-05-22T15:58:40+08:00] - Frequency-ranked Space Recommendations
+
+- js/search.js L1-358 -> L1-369 (+11 -0)
+- CHANGELOG.md L1-58 -> L1-58 (+1 -1)
+- CHANGE_TRACKING.md L1-131 -> L1-135 (+4 -0)
+
+## [2026-05-22T15:55:22+08:00] - Space Recommendations and Ctrl Number Shortcuts
+
+- js/search.js L1-331 -> L1-358 (+32 -5)
+- CHANGELOG.md L1-57 -> L1-58 (+1 -0)
+- CHANGE_TRACKING.md L1-127 -> L1-131 (+4 -0)
+
+## [2026-05-13T23:21:48+08:00] - Search Navigation Flash Surface Removal
+
+- css/style.css L1-1425 -> L1-1437 (+12 -0)
+- js/search.js L1-311 -> L1-331 (+23 -2)
+- CHANGELOG.md L1-56 -> L1-57 (+1 -0)
+- CHANGE_TRACKING.md L1-122 -> L1-127 (+5 -0)
+
 ## [2026-05-13T09:23:21+08:00] - Custom Odin Sync Scope Picker
 
 - index.html L1-208 -> L1-215 (+7 -0)

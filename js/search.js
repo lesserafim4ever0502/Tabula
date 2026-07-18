@@ -86,10 +86,45 @@ const TabulaSearch = (function () {
     }
   }
 
-  function prepareForNavigation() {
+  function prepareForNavigation(hideSearchSurface = true) {
     hideDropdown(true);
     inputEl.blur();
     document.body.classList.remove('is-searching');
+    if (hideSearchSurface) {
+      inputEl.value = '';
+      document.body.classList.add('is-navigating');
+      dropdownContainer.style.display = 'none';
+      searchBoxWrapper.style.visibility = 'hidden';
+      searchBoxWrapper.style.opacity = '0';
+      document.body.offsetHeight;
+    }
+  }
+
+  async function showRecommendedBookmarks() {
+    const allBM = await window.TabulaStorage.getAll();
+    filteredBookmarks = allBM
+      .slice()
+      .sort((a, b) => {
+        if ((b.frequency || 0) !== (a.frequency || 0)) {
+          return (b.frequency || 0) - (a.frequency || 0);
+        }
+        if ((b.lastUsedAt || 0) !== (a.lastUsedAt || 0)) {
+          return (b.lastUsedAt || 0) - (a.lastUsedAt || 0);
+        }
+        return (b.createdAt || 0) - (a.createdAt || 0);
+      })
+      .slice(0, 3);
+    selectedIndex = -1;
+    renderDropdown(filteredBookmarks, '');
+  }
+
+  async function openBookmarkAtIndex(index) {
+    if (index < 0 || index >= filteredBookmarks.length) return false;
+    const targetBM = filteredBookmarks[index];
+    await window.TabulaStorage.incrementFrequency(targetBM.id);
+    prepareForNavigation();
+    window.location.href = targetBM.url;
+    return true;
   }
 
   // 防XSS简易转义
@@ -161,7 +196,11 @@ const TabulaSearch = (function () {
   // 跳转穿透并加权
   async function executeAction() {
     const rawVal = inputEl.value.trim();
-    if (!rawVal) return;
+    if (!rawVal) {
+      const targetIndex = selectedIndex >= 0 ? selectedIndex : 0;
+      await openBookmarkAtIndex(targetIndex);
+      return;
+    }
 
     // 模式 A: 指令驱动搜索 (仅当以 / 开头时触发搜索引擎)
     if (rawVal.startsWith('/')) {
@@ -208,7 +247,7 @@ const TabulaSearch = (function () {
         
         if (targets.length > 0) {
           targets.forEach(t => window.TabulaStorage.incrementFrequency(t.id));
-          prepareForNavigation();
+          prepareForNavigation(false);
           
           targets.forEach(t => {
             if (window.chrome && window.chrome.tabs && window.chrome.tabs.create) {
@@ -227,11 +266,7 @@ const TabulaSearch = (function () {
     // 如果存在匹配的书签结果，无论用户是否用键盘通过 ArrowDown 显式选中，回车即执行首位（权重最高项）跳转
     if (filteredBookmarks.length > 0) {
       const targetIndex = selectedIndex >= 0 ? selectedIndex : 0;
-      const targetBM = filteredBookmarks[targetIndex];
-      
-      await window.TabulaStorage.incrementFrequency(targetBM.id);
-      prepareForNavigation();
-      window.location.href = targetBM.url;
+      await openBookmarkAtIndex(targetIndex);
     } else {
       // 没有任何匹配且未输入指令：静默处理或可在此提示
       console.log("[Tabula] Logic: No match and no '/' instruction found.");
@@ -240,6 +275,21 @@ const TabulaSearch = (function () {
 
   // 专门处理拦截键盘系统行为（例如阻止上下键在 input 中光标乱跑）
   function handleKeyDown(e) {
+    if (e.ctrlKey && !e.altKey && !e.metaKey && /^[1-3]$/.test(e.key)) {
+      const shortcutIndex = parseInt(e.key, 10) - 1;
+      if (shortcutIndex < filteredBookmarks.length) {
+        e.preventDefault();
+        openBookmarkAtIndex(shortcutIndex);
+      }
+      return;
+    }
+
+    if (e.code === 'Space' && inputEl.value.trim() === '') {
+      e.preventDefault();
+      showRecommendedBookmarks();
+      return;
+    }
+
     if (e.key === 'Escape') {
       inputEl.blur();
       hideDropdown();
@@ -342,6 +392,19 @@ const TabulaSearch = (function () {
     }
   };
 })();
+
+window.addEventListener('pageshow', () => {
+  document.body.classList.remove('is-navigating');
+  const wrapper = document.querySelector('.search-box-wrapper');
+  const dropdown = document.getElementById('bookmark-dropdown-container');
+  if (wrapper) {
+    wrapper.style.visibility = '';
+    wrapper.style.opacity = '';
+  }
+  if (dropdown) {
+    dropdown.style.display = '';
+  }
+});
 
 // 提供全局引用
 window.TabulaSearch = TabulaSearch;
