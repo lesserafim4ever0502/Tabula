@@ -1686,7 +1686,6 @@ body.is-navigating #bookmark-dropdown-container {
   pointer-events: none;
   user-select: none;
   -webkit-user-select: none;
-  transition: opacity 0.15s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.15s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .wheel-menu-overlay.active {
@@ -1697,23 +1696,16 @@ body.is-navigating #bookmark-dropdown-container {
 
 .wheel-menu-disc {
   position: absolute;
-  width: 280px;
-  height: 280px;
-  transform: translate(-50%, -50%) scale(0.92);
+  width: 330px;
+  height: 330px;
+  transform: translate(-50%, -50%);
   border-radius: 50%;
-  background: rgba(18, 20, 26, 0.78);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.06) inset;
-  opacity: 0;
-  transition: opacity 0.15s cubic-bezier(0.16, 1, 0.3, 1), transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  background: rgba(18, 20, 26, 0.88);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.08) inset;
   pointer-events: auto;
-}
-
-.wheel-menu-overlay.active .wheel-menu-disc {
-  opacity: 1;
-  transform: translate(-50%, -50%) scale(1);
 }
 
 .wheel-svg {
@@ -1729,15 +1721,15 @@ body.is-navigating #bookmark-dropdown-container {
   stroke: rgba(255, 255, 255, 0.08);
   stroke-width: 1;
   cursor: pointer;
-  transition: fill 0.1s ease, stroke 0.1s ease, filter 0.1s ease;
+  transition: fill 0.08s ease, stroke 0.08s ease, filter 0.08s ease;
 }
 
 .wheel-sector-path:hover,
 .wheel-sector-path.active {
-  fill: rgba(88, 101, 242, 0.36);
-  stroke: rgba(147, 160, 255, 0.85);
+  fill: rgba(88, 101, 242, 0.38);
+  stroke: rgba(147, 160, 255, 0.9);
   stroke-width: 1.5;
-  filter: drop-shadow(0 0 6px rgba(88, 101, 242, 0.45));
+  filter: drop-shadow(0 0 8px rgba(88, 101, 242, 0.55));
 }
 
 .wheel-slots-container {
@@ -1753,39 +1745,39 @@ body.is-navigating #bookmark-dropdown-container {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 58px;
-  height: 52px;
+  width: 68px;
+  height: 60px;
   text-align: center;
   pointer-events: none;
-  transition: transform 0.12s cubic-bezier(0.16, 1, 0.3, 1), color 0.12s ease;
+  transition: transform 0.1s cubic-bezier(0.16, 1, 0.3, 1), color 0.1s ease;
 }
 
 .wheel-slot-node.active {
-  transform: translate(-50%, -50%) scale(1.12);
+  transform: translate(-50%, -50%) scale(1.15);
 }
 
 .slot-icon-wrap {
-  font-size: 18px;
+  font-size: 22px;
   line-height: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 2px;
-  color: rgba(255, 255, 255, 0.88);
+  margin-bottom: 3px;
+  color: rgba(255, 255, 255, 0.92);
 }
 
 .slot-icon-wrap .bm-icon-img {
-  width: 18px;
-  height: 18px;
+  width: 22px;
+  height: 22px;
   border-radius: 4px;
   object-fit: cover;
 }
 
 .slot-title-wrap {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.72);
-  max-width: 54px;
+  color: rgba(255, 255, 255, 0.78);
+  max-width: 64px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1823,26 +1815,26 @@ body.is-navigating #bookmark-dropdown-container {
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  width: 88px;
-  height: 88px;
+  width: 104px;
+  height: 104px;
   border-radius: 50%;
-  background: rgba(12, 14, 18, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+  background: rgba(12, 14, 18, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 6px;
+  padding: 8px;
   box-sizing: border-box;
   pointer-events: none;
-  transition: border-color 0.15s ease, background 0.15s ease;
+  transition: border-color 0.1s ease, background 0.1s ease;
 }
 
 .wheel-center-hub.has-selection {
-  border-color: rgba(88, 101, 242, 0.6);
-  background: rgba(18, 22, 34, 0.95);
+  border-color: rgba(88, 101, 242, 0.65);
+  background: rgba(18, 22, 34, 0.96);
 }
 
 .center-hub-content {
@@ -1862,22 +1854,22 @@ body.is-navigating #bookmark-dropdown-container {
 }
 
 .center-icon-wrap {
-  font-size: 16px;
+  font-size: 20px;
   line-height: 1;
   margin-bottom: 2px;
 }
 
 .center-icon-wrap .bm-icon-img {
-  width: 16px;
-  height: 16px;
-  border-radius: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
 }
 
 .center-title-text {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
   color: #fff;
-  max-width: 74px;
+  max-width: 88px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1885,9 +1877,9 @@ body.is-navigating #bookmark-dropdown-container {
 }
 
 .center-domain-text {
-  font-size: 8px;
-  color: rgba(255, 255, 255, 0.5);
-  max-width: 74px;
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.55);
+  max-width: 88px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1901,16 +1893,17 @@ body.is-navigating #bookmark-dropdown-container {
   gap: 2px;
 }
 
-.hint-gesture {
-  font-size: 10px;
-  color: rgba(255, 255, 255, 0.75);
+.center-default-hint .hint-gesture {
+  font-size: 11px;
   font-weight: 500;
+  color: rgba(255, 255, 255, 0.85);
 }
 
-.hint-key {
-  font-size: 8px;
-  color: rgba(255, 255, 255, 0.4);
+.center-default-hint .hint-key {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.45);
 }
+
 
 /* Switch Controls (iOS Toggle Switches) */
 .switch-control {

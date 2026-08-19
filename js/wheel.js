@@ -21,13 +21,13 @@ const TabulaWheel = (function () {
   const STATE_EXECUTE = 'EXECUTE';
 
   // 几何与阈值参数 (px & rad)
-  const DISC_RADIUS = 140;       // 轮盘视觉半径
-  const INNER_RADIUS = 44;       // 中心死区 / 预览区半径
-  const COMMIT_RADIUS = 58;      // 手势提交触发半径 (防止误触)
-  const ICON_RADIUS = 92;        // 图标中心分布半径
+  const DISC_RADIUS = 165;       // 轮盘视觉半径 (直径 330px，更大更清晰)
+  const INNER_RADIUS = 52;       // 中心死区 / 预览区半径 (直径 104px)
+  const COMMIT_RADIUS = 64;      // 手势提交触发半径 (防止误触)
+  const ICON_RADIUS = 112;       // 图标中心分布半径
   const HYSTERESIS_RAD = 0.0873; // 扇区保持滞后量 (约 5°)
   const MOVE_THRESHOLD = 18;     // 长按判定允许的最大微小抖动位移 (px)
-  const VIEWPORT_PADDING = 12;   // 视口安全边缘边距 (px)
+  const VIEWPORT_PADDING = 16;   // 视口安全边缘边距 (px)
 
   // 8 方向索引映射：0: N, 1: NE, 2: E, 3: SE, 4: S, 5: SW, 6: W, 7: NW
   const DIRECTIONS = ['n', 'ne', 'e', 'se', 's', 'sw', 'w', 'nw'];
@@ -739,23 +739,13 @@ const TabulaWheel = (function () {
     }
 
     if (currentState === STATE_GESTURE_ACTIVE) {
-      // 必须吞掉紧随其后由浏览器派发的 synthetic click
       suppressNextClick = true;
 
-      const dx = e.clientX - gestureOrigin.x;
-      const dy = e.clientY - gestureOrigin.y;
-      const dist = Math.hypot(dx, dy);
-
-      if (dist >= COMMIT_RADIUS && activeSectorIndex >= 0) {
-        // 1. Quicker 经典手势划过直达：划出提交半径且已选中扇区，立即触发
+      // 1. 滑动到某个有效书签扇区：松开中键/左键立即打开书签！
+      if (activeSectorIndex >= 0 && resolvedSlots[activeSectorIndex]?.bookmark) {
         executeSector(activeSectorIndex);
-      } else if (dist < INNER_RADIUS) {
-        // 2. 在中心死区内松手：平滑进入 PINNED 驻留态
-        currentState = STATE_PINNED;
-        activeSectorIndex = -1;
-        renderUIState();
       } else {
-        // 3. 滑到半路未达提交半径松手：退出
+        // 2. 未滑动到任何有效书签或在中心死区松开：立即关闭轮盘
         hideWheel();
       }
     }
