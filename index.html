@@ -79,6 +79,7 @@
           <button class="nav-item active" data-tab="engine"><span class="t-icon i-search"></span> Search Engine</button>
           <button class="nav-item" data-tab="background"><span class="t-icon i-image"></span> Background</button>
           <button class="nav-item" data-tab="interface"><span class="t-icon i-layout"></span> Interface</button>
+          <button class="nav-item" data-tab="wheel"><span class="t-icon i-wheel"></span> Radial Wheel</button>
           <button class="nav-item" data-tab="data"><span class="t-icon i-database"></span> Data & Backup</button>
         </nav>
       </aside>
@@ -172,6 +173,49 @@
             </div>
           </div>
 
+          <!-- Tab: Radial Wheel (Quicker 风格书签轮盘) -->
+          <div class="tab-pane" id="tab-wheel">
+            <div class="setting-group">
+              <label>Radial Gesture Wheel (书签轮盘菜单)</label>
+              <p class="section-desc">在起始页空白区域按住鼠标左键弹出 Quicker 风格 8 方向书签轮盘。</p>
+              
+              <div class="bg-setting-list">
+                <div class="bg-item">
+                  <span>Enable Wheel Menu:</span>
+                  <label class="switch-control">
+                    <input type="checkbox" id="wheel-enabled-toggle">
+                    <span class="switch-slider"></span>
+                  </label>
+                </div>
+                <div class="bg-item" title="长按鼠标左键触发轮盘的延时 (ms)">
+                  <span>Trigger Delay:</span>
+                  <div style="display: flex; align-items: center; gap: 10px; width: 60%;">
+                    <input type="range" id="wheel-delay-slider" min="200" max="800" step="20" value="320" class="setting-slider" style="flex: 1;">
+                    <span id="wheel-delay-val" style="font-size: 12px; min-width: 48px; color: var(--text-muted);">320ms</span>
+                  </div>
+                </div>
+                <div class="bg-item" title="是否在新标签页中打开书签">
+                  <span>Open in New Tab:</span>
+                  <label class="switch-control">
+                    <input type="checkbox" id="wheel-newtab-toggle">
+                    <span class="switch-slider"></span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- 8 槽位可视化配置器 -->
+              <div class="wheel-slots-section">
+                <div class="wheel-slots-header">
+                  <label>8-Direction Slot Bindings (方向槽位绑定)</label>
+                  <button id="btn-refresh-wheel-slots" class="action-btn btn-inline" title="重新从高频书签刷新未锁定的 Auto 槽位">
+                    <span class="t-icon i-health"></span> Refresh Suggestions
+                  </button>
+                </div>
+                <div id="wheel-slots-list" class="wheel-slots-grid"></div>
+              </div>
+            </div>
+          </div>
+
           <!-- Tab: Data -->
           <div class="tab-pane" id="tab-data">
             <div class="setting-group backup-section">
@@ -214,6 +258,23 @@
     </div>
   </div>
 
+  <!-- 轮盘菜单书签绑定选择器 Sub-Modal -->
+  <div id="wheel-picker-modal" class="modal-overlay wheel-picker-overlay" style="display: none;">
+    <div class="wheel-picker-card">
+      <div class="wheel-picker-header">
+        <h3 id="wheel-picker-dir-title">选择书签绑定至槽位</h3>
+        <button id="wheel-picker-close" class="icon-btn" title="Close">✕</button>
+      </div>
+      <div class="wheel-picker-search-wrap">
+        <input type="text" id="wheel-picker-search" class="setting-input" placeholder="搜索书签标题 / 网址 / 别名..." autocomplete="off">
+      </div>
+      <div id="wheel-picker-list" class="wheel-picker-list"></div>
+    </div>
+  </div>
+
+  <!-- 轮盘菜单全局挂载容器 (Wheel Overlay) -->
+  <div id="wheel-menu-overlay" class="wheel-menu-overlay"></div>
+
   <!-- JS 载入顺序很重要，settings 是配置底座 -->
   <script src="js/idb.js"></script>
   <script src="js/storage.js"></script>
@@ -221,6 +282,7 @@
   <script src="js/pinyin_match.js"></script>
   <script src="js/search.js"></script>
   <script src="js/drawer.js"></script>
+  <script src="js/wheel.js"></script>
 
   <!-- 初始化环境预热 -->
   <script src="js/main.js"></script>

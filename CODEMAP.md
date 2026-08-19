@@ -8,14 +8,17 @@ graph TD
     A --> C[js/search.js]
     A --> D[js/settings.js]
     A --> E[js/drawer.js]
+    A --> G[js/wheel.js]
     C --> F[js/storage.js]
     E --> F
+    G --> F
+    G -.-> D
 ```
 
 ## 🎨 Core Design Systems
 
 ### 1. Premium Glassmorphism
-- **Context**: Centered search box with adaptive background blurring.
+- **Context**: Centered search box and radial wheel disc with adaptive background blurring.
 - **Variables**: `--search-top`, `--search-left`, `--glass-blur`, `--wallpaper-blur`.
 - **Transitions**: Smooth layout initialization via `preload.js` to prevent FOUC.
 - **Background Layers**: `#bg-color-layer` owns the solid transition color, while `#bg-layer` owns only wallpaper imagery above it.
@@ -27,7 +30,8 @@ graph TD
 
 ## ⚙️ Core Modules
 
-- **js/search.js**: Handles command extraction (`/`), multi-term delimiter splitting (`,`), frequency-scored bookmark retrieval, and spatial-aware dropdown flipping.
+- **js/wheel.js**: Quicker-style left-click long-press radial bookmark menu (5-state Pointer machine, dual origins, muscle-memory stable 8-direction slots, sector retention hysteresis).
+- **js/search.js**: Handles command extraction (`/`), multi-term delimiter splitting (`,`), frequency-scored bookmark retrieval, spatial-aware dropdown flipping, and `dismiss()`.
 - **js/storage.js**: Adapts to `chrome.storage.local` with fallback to `localStorage`.
-- **js/settings.js**: Owns visual settings, backup/restore, and the local-only Odin bookmark sync action through `127.0.0.1:29000`, including status checks, dry-run preview, scoped sync payloads, and result details. / 负责视觉设置、备份恢复，以及通过 `127.0.0.1:29000` 执行仅本机访问的 Odin 书签同步，包括连接状态、预览、范围筛选和结果明细。
-- **js/drawer.js**: High-performance bookmark management & full data backup (Export/Import).
+- **js/settings.js**: Single config owner (`tabula_config`), owns visual settings, wheel menu configuration & slot binding, backup/restore, and Odin bookmark sync.
+- **js/drawer.js**: High-performance bookmark management & full data backup (Export/Import), with `isOpen()` status detection.

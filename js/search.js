@@ -369,9 +369,11 @@ const TabulaSearch = (function () {
       // 全局按键捕获：只在用户非功能区键入时夺回焦点
       document.addEventListener('keydown', (e) => {
         // 排除掉已经聚焦在输入框、侧边栏搜索框、或者正在操作设置/模态框的情况
-        const isInputActive = document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA';
-        const isModalOpen = document.getElementById('settings-modal').style.display !== 'none';
-        const isDrawerOpen = document.getElementById('drawer-container').classList.contains('active');
+        const isInputActive = document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA');
+        const isModalOpen = document.getElementById('settings-modal') && document.getElementById('settings-modal').style.display !== 'none';
+        const isDrawerOpen = (typeof TabulaDrawer !== 'undefined' && TabulaDrawer.isOpen) 
+          ? TabulaDrawer.isOpen() 
+          : (document.getElementById('drawer-container') && document.getElementById('drawer-container').classList.contains('open'));
 
         if (!isInputActive && !isModalOpen && !isDrawerOpen) {
           // 全局快捷键夺回焦点：Shift + Space (或普通单字符)
@@ -389,6 +391,17 @@ const TabulaSearch = (function () {
       });
 
       console.log("[TabulaSearch] Key/Input tracking initialized.");
+    },
+
+    /**
+     * 主动退出搜索态并关闭下拉（供轮盘等模块调用）
+     */
+    dismiss() {
+      hideDropdown(true);
+      document.body.classList.remove('is-searching');
+      if (inputEl) {
+        inputEl.blur();
+      }
     }
   };
 })();

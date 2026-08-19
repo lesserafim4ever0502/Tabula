@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- **Quicker-Style Radial Wheel Menu (左键长按书签轮盘)**: Added an ultra-responsive 8-direction radial gesture menu on the new tab page.
+  - **Gesture-Release & Pin-and-Click**: Supports both gesture dragging with release-to-navigate and center deadzone release to enter stationary pinned mode.
+  - **5-State Pointer State Machine**: Cleanly handles `IDLE`, `PRESS_PENDING`, `GESTURE_ACTIVE`, `PINNED`, and `EXECUTE` with pointer cancellation, blur, and synthetic click suppression.
+  - **Muscle-Memory Stable 8-Direction Slots**: Auto-allocates Top 8 bookmarks on initial run and preserves fixed directional mappings (`N, NE, E, SE, S, SW, W, NW`) regardless of subsequent frequency changes. Deleted custom bookmarks remain empty/missing without unwanted auto-shifting.
+  - **Dual Coordinates Architecture**: Preserves raw `gestureOrigin` during drag interactions to eliminate directional distortion near screen borders, with clamped `visualCenter` preventing viewport clipping.
+  - **Sector Retention Hysteresis**: Applies $\pm 5^\circ$ angular hysteresis when active on a sector to eliminate boundary jitter.
+  - **Radial Wheel Settings & Visual Slot Configurator**: Added a dedicated Settings tab with an interactive 8-slot editor, trigger delay slider (200ms–800ms), new tab toggle, and "Refresh Auto Suggestions" action.
+  - **Single Config Center**: Unified `tabula_config` management inside `TabulaSettings` with `getConfig()` and `updateConfig(patch)` broadcasting `tabula:config-changed` custom events.
+- **Auto Favicon Fetching (⚡ Fetch)**: Added one-click automated favicon fetching in the bookmark drawer editor. Parses domain, retrieves high-resolution icons (Google S2, DuckDuckGo, root favicon), adapts transparency, and processes to 48×48 PNG Base64 via Canvas.
 - **Space Recommendations & Ctrl Shortcuts**: Added frequency-ranked empty-input Space recommendations and `Ctrl+1` through `Ctrl+3` quick opening for visible bookmark results.
 - **Odin Sync Preview & Details**: Added Odin connection status, dry-run preview, result details, and selectable bookmark sync scopes in Settings → Data & Backup.
 - **Odin Local Sync**: Added a Data & Backup action that syncs Tabula bookmarks and aliases to Odin through the local `127.0.0.1:29000` API.

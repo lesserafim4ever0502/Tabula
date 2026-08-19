@@ -15,9 +15,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     TabulaDrawer.init();
   }
   
-  // 4. 用户设置（外观、搜索引擎持久化模块）初始化
+  // 4. 用户设置（外观、搜索引擎、轮盘持久化模块）初始化
   if (typeof TabulaSettings !== 'undefined') {
     await TabulaSettings.init();
+  }
+
+  // 5. Quicker 风格书签轮盘菜单初始化（依赖 Settings 与 Storage）
+  if (typeof TabulaWheel !== 'undefined') {
+    await TabulaWheel.init();
   }
   
   console.log("[Tabula Main] Application successfully booted.");

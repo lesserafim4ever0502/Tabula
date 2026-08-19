@@ -63,6 +63,103 @@ const TabulaDrawer = (function () {
     });
   }
 
+  // 自动从 URL 抓取并生成 48×48 PNG Base64 图标
+  async function fetchRemoteFavicon(rawUrl) {
+    if (!rawUrl || !rawUrl.trim()) {
+      throw new Error('请先输入有效的 URL 地址');
+    }
+    let urlStr = rawUrl.trim();
+    if (!/^https?:\/\//i.test(urlStr)) {
+      urlStr = 'https://' + urlStr;
+    }
+    let domain = '';
+    try {
+      const parsed = new URL(urlStr);
+      domain = parsed.hostname;
+    } catch (e) {
+      throw new Error('网址格式不正确');
+    }
+    if (!domain) {
+      throw new Error('无法解析域名');
+    }
+
+    const candidateSources = [
+      `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=128`,
+      `https://icons.duckduckgo.com/ip3/${encodeURIComponent(domain)}.ico`,
+      `https://${domain}/favicon.ico`,
+      `https://${domain}/apple-touch-icon.png`
+    ];
+
+    for (const src of candidateSources) {
+      try {
+        const base64 = await loadAndCropFavicon(src);
+        if (base64) return base64;
+      } catch (e) {
+        continue;
+      }
+    }
+    throw new Error('未能获取到网站图标，请检查网址或手动上传');
+  }
+
+  async function loadAndCropFavicon(src) {
+    let objectUrl = null;
+    let imgSrc = src;
+    try {
+      const res = await fetch(src, { mode: 'cors' });
+      if (res.ok) {
+        const blob = await res.blob();
+        if (blob && blob.size > 50) {
+          objectUrl = URL.createObjectURL(blob);
+          imgSrc = objectUrl;
+        }
+      }
+    } catch (e) {
+      imgSrc = src;
+    }
+
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      const timer = setTimeout(() => {
+        if (objectUrl) URL.revokeObjectURL(objectUrl);
+        reject(new Error('Timeout'));
+      }, 5000);
+
+      img.onload = () => {
+        clearTimeout(timer);
+        if (objectUrl) URL.revokeObjectURL(objectUrl);
+        if (img.naturalWidth < 4 || img.naturalHeight < 4) {
+          return reject(new Error('Empty image'));
+        }
+        try {
+          const SIZE = 48;
+          const canvas = document.createElement('canvas');
+          canvas.width = SIZE;
+          canvas.height = SIZE;
+          const ctx = canvas.getContext('2d');
+          ctx.clearRect(0, 0, SIZE, SIZE);
+
+          const scale = Math.min(SIZE / img.naturalWidth, SIZE / img.naturalHeight);
+          const drawW = Math.max(1, Math.round(img.naturalWidth * scale));
+          const drawH = Math.max(1, Math.round(img.naturalHeight * scale));
+          const dx = Math.round((SIZE - drawW) / 2);
+          const dy = Math.round((SIZE - drawH) / 2);
+
+          ctx.drawImage(img, dx, dy, drawW, drawH);
+          resolve(canvas.toDataURL('image/png'));
+        } catch (err) {
+          reject(err);
+        }
+      };
+      img.onerror = () => {
+        clearTimeout(timer);
+        if (objectUrl) URL.revokeObjectURL(objectUrl);
+        reject(new Error('Image load error'));
+      };
+      img.src = imgSrc;
+    });
+  }
+
   // ==== 核心开关控制 ====
 
   function openDrawer() {
@@ -163,7 +260,8 @@ const TabulaDrawer = (function () {
               </div>
               <div class="edit-right-col">
                 <input type="text" class="edit-alias-inp" value="${escapeHTML(bm.alias || '')}" placeholder="Alias">
-                <button class="btn-sm icon-reset-btn">↩ Reset</button>
+                <button class="btn-sm icon-fetch-btn" title="根据输入的 URL 自动抓取网站高清图标">⚡ Fetch</button>
+                <button class="btn-sm icon-reset-btn" title="重置为默认书签图标">↩ Reset</button>
               </div>
             </div>
             <input type="text" class="edit-title-inp" value="${escapeHTML(bm.title)}" placeholder="Title">
@@ -321,6 +419,44 @@ const TabulaDrawer = (function () {
         form.dataset.pendingIcon = base64;
         // 实时预览
         area.querySelector('.icon-preview-wrap').innerHTML = `<img class="bm-icon-img" src="${base64}" alt="icon">`;
+      });
+    });
+
+    // 自动抓取图标
+    const iconFetchBtns = listContainer.querySelectorAll('.icon-fetch-btn');
+    iconFetchBtns.forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const form = btn.closest('.bm-edit-form');
+        const urlInput = form.querySelector('.edit-url-inp');
+        const urlVal = urlInput ? urlInput.value.trim() : '';
+        if (!urlVal) {
+          alert('请先输入有效的 URL 地址');
+          if (urlInput) urlInput.focus();
+          return;
+        }
+
+        const originalText = btn.textContent;
+        btn.textContent = '⏳ ...';
+        btn.disabled = true;
+
+        try {
+          const base64 = await fetchRemoteFavicon(urlVal);
+          form.dataset.pendingIcon = base64;
+          const area = form.querySelector('.icon-preview-wrap');
+          if (area) {
+            area.innerHTML = `<img class="bm-icon-img" src="${base64}" alt="icon">`;
+          }
+          btn.textContent = '✓ Done';
+          setTimeout(() => {
+            btn.textContent = originalText;
+            btn.disabled = false;
+          }, 1200);
+        } catch (err) {
+          alert(err.message || '获取图标失败，请检查网址或手动上传');
+          btn.textContent = originalText;
+          btn.disabled = false;
+        }
       });
     });
 
@@ -563,6 +699,10 @@ const TabulaDrawer = (function () {
       }
 
       console.log("[TabulaDrawer] Drawer initialized via Ctrl+B.");
+    },
+
+    isOpen() {
+      return !!(drawerEl && drawerEl.classList.contains('open'));
     }
   };
 })();

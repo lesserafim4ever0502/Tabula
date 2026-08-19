@@ -16,7 +16,21 @@ const TabulaSettings = (function () {
     wpBlur: 0,
     wpBrightness: 1.0,
     searchLeft: 50,
-    searchTop: 45
+    searchTop: 45,
+    // Radial Wheel 轮盘配置
+    wheelEnabled: true,
+    wheelTriggerDelay: 320,
+    wheelOpenNewTab: false,
+    wheelSlots: {
+      n:  { mode: 'auto', bookmarkId: null },
+      ne: { mode: 'auto', bookmarkId: null },
+      e:  { mode: 'auto', bookmarkId: null },
+      se: { mode: 'auto', bookmarkId: null },
+      s:  { mode: 'auto', bookmarkId: null },
+      sw: { mode: 'auto', bookmarkId: null },
+      w:  { mode: 'auto', bookmarkId: null },
+      nw: { mode: 'auto', bookmarkId: null }
+    }
   };
 
   const engineUrls = {
@@ -37,7 +51,14 @@ const TabulaSettings = (function () {
     return new Promise((resolve) => {
       chrome.storage.local.get([STORAGE_KEY], async (res) => {
         if (res[STORAGE_KEY]) {
-          config = { ...DEFAULT_CONFIG, ...res[STORAGE_KEY] };
+          config = {
+            ...DEFAULT_CONFIG,
+            ...res[STORAGE_KEY],
+            wheelSlots: {
+              ...DEFAULT_CONFIG.wheelSlots,
+              ...(res[STORAGE_KEY].wheelSlots || {})
+            }
+          };
           
           // ==== 自动迁移逻辑：Base64 -> IndexedDB & 生成缩略图 ====
           if (config.bgImage && config.bgImage.startsWith('data:image')) {
@@ -252,6 +273,10 @@ const TabulaSettings = (function () {
         if (targetPane) {
           targetPane.classList.add('active');
         }
+
+        if (item.dataset.tab === 'wheel') {
+          renderWheelTabUI();
+        }
       });
     });
 
@@ -351,11 +376,18 @@ const TabulaSettings = (function () {
       reader.readAsDataURL(file);
     });
 
-    // Handle Reset Background
+    // Handle Reset Background (仅重置背景样式，保护搜索引擎、界面定位及轮盘等其他配置)
     btnReset.addEventListener('click', async () => {
-      config = { ...DEFAULT_CONFIG, engine: config.engine };
+      config.bgColor = DEFAULT_CONFIG.bgColor;
+      config.bgImage = DEFAULT_CONFIG.bgImage;
+      config.wpBlur = DEFAULT_CONFIG.wpBlur;
+      config.wpBrightness = DEFAULT_CONFIG.wpBrightness;
+      localStorage.removeItem('tabula_bgImage');
+      localStorage.removeItem('tabula_bgThumb');
+      window.__tabula_wp_cache = null;
       await TabulaIDB.deleteWallpaper('main');
       await applyBackground();
+      await applyVisualStyles();
       renderUIState();
       await saveConfig();
     });
@@ -761,19 +793,345 @@ const TabulaSettings = (function () {
   }
 
   /**
-   * 生成微型缩略图 (用于首屏极致无感加载)
-   * @param {HTMLImageElement} img 
-   * @returns {string} Base64 DataURI
+   * 轮盘 8 方向元数据
    */
-  function generateThumbnail(img) {
-    const thumbCanvas = document.createElement('canvas');
-    const size = 40; // 极小尺寸
-    thumbCanvas.width = size;
-    thumbCanvas.height = size;
-    const tctx = thumbCanvas.getContext('2d');
-    // 填满绘制
-    tctx.drawImage(img, 0, 0, size, size);
-    return thumbCanvas.toDataURL('image/webp', 0.2); // 低质量高压缩
+  const WHEEL_DIRECTIONS = [
+    { key: 'n',  label: '北 (Up)',         arrow: '↑' },
+    { key: 'ne', label: '东北 (Up-Right)',   arrow: '↗' },
+    { key: 'e',  label: '东 (Right)',       arrow: '→' },
+    { key: 'se', label: '东南 (Down-Right)', arrow: '↘' },
+    { key: 's',  label: '南 (Down)',        arrow: '↓' },
+    { key: 'sw', label: '西南 (Down-Left)',  arrow: '↙' },
+    { key: 'w',  label: '西 (Left)',        arrow: '←' },
+    { key: 'nw', label: '西北 (Up-Left)',   arrow: '↖' }
+  ];
+
+  let currentPickingDirection = null;
+
+  function getIconHTML(icon) {
+    if (!icon || icon === '📌' || icon === 'i-bookmark') {
+      return '<span class="t-icon i-bookmark"></span>';
+    }
+    if (typeof icon === 'string' && icon.startsWith('data:image')) {
+      return `<img class="bm-icon-img" src="${icon}" alt="icon">`;
+    }
+    if (typeof icon === 'string' && icon.startsWith('i-')) {
+      return `<span class="t-icon ${icon}"></span>`;
+    }
+    return `<span>${icon}</span>`;
+  }
+
+  /**
+   * 渲染设置面板中的 Radial Wheel 选项卡 UI
+   */
+  async function renderWheelTabUI() {
+    const enableToggle = document.getElementById('wheel-enabled-toggle');
+    const delaySlider = document.getElementById('wheel-delay-slider');
+    const delayVal = document.getElementById('wheel-delay-val');
+    const newtabToggle = document.getElementById('wheel-newtab-toggle');
+    const slotsContainer = document.getElementById('wheel-slots-list');
+
+    if (!enableToggle || !slotsContainer) return;
+
+    enableToggle.checked = config.wheelEnabled !== false;
+    if (delaySlider) delaySlider.value = config.wheelTriggerDelay || 320;
+    if (delayVal) delayVal.textContent = `${config.wheelTriggerDelay || 320}ms`;
+    if (newtabToggle) newtabToggle.checked = !!config.wheelOpenNewTab;
+
+    let allBookmarks = [];
+    if (typeof window.TabulaStorage !== 'undefined') {
+      allBookmarks = await window.TabulaStorage.getAll();
+    }
+    const bmMap = new Map(allBookmarks.map(b => [b.id, b]));
+
+    const wheelSlots = config.wheelSlots || {};
+    let html = '';
+
+    WHEEL_DIRECTIONS.forEach(dir => {
+      const slot = wheelSlots[dir.key] || { mode: 'auto', bookmarkId: null };
+      const bm = slot.bookmarkId ? bmMap.get(slot.bookmarkId) : null;
+
+      let badgeHtml = '';
+      let titleText = '未分配 (Unassigned)';
+      let iconHtml = '<span class="t-icon i-plus"></span>';
+
+      if (slot.mode === 'custom') {
+        if (bm) {
+          badgeHtml = '<span class="slot-badge custom">Custom</span>';
+          titleText = bm.title || bm.url;
+          iconHtml = getIconHTML(bm.icon);
+        } else {
+          badgeHtml = '<span class="slot-badge missing">Missing</span>';
+          titleText = '书签已被删除 (Deleted)';
+          iconHtml = '<span class="t-icon i-trash"></span>';
+        }
+      } else {
+        if (bm) {
+          badgeHtml = '<span class="slot-badge auto">Auto</span>';
+          titleText = bm.title || bm.url;
+          iconHtml = getIconHTML(bm.icon);
+        } else {
+          badgeHtml = '<span class="slot-badge empty">Auto (Empty)</span>';
+          titleText = '等待自动填充 (Waiting)';
+        }
+      }
+
+      html += `
+        <div class="wheel-slot-card" data-dir="${dir.key}">
+          <div class="slot-card-header">
+            <span class="slot-card-arrow">${dir.arrow}</span>
+            <span class="slot-card-label">${dir.label}</span>
+            ${badgeHtml}
+          </div>
+          <div class="slot-card-body">
+            <div class="slot-card-icon">${iconHtml}</div>
+            <div class="slot-card-title" title="${escapeHTML(titleText)}">${escapeHTML(titleText)}</div>
+          </div>
+          <div class="slot-card-actions">
+            <button class="action-btn btn-inline btn-pick-bm" data-dir="${dir.key}" title="选择书签固定">Pick</button>
+            <button class="action-btn btn-inline btn-auto-bm" data-dir="${dir.key}" title="恢复为自动推荐">Auto</button>
+            <button class="action-btn btn-inline btn-clear-bm" data-dir="${dir.key}" title="清空槽位">Clear</button>
+          </div>
+        </div>
+      `;
+    });
+
+    slotsContainer.innerHTML = html;
+  }
+
+  function escapeHTML(str) {
+    if (!str) return '';
+    return String(str).replace(/[&<>'"]/g, tag => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      "'": '&#39;',
+      '"': '&quot;'
+    }[tag] || tag));
+  }
+
+  /**
+   * 打开书签选择器 Popover 供槽位绑定
+   */
+  async function openBookmarkPicker(dirKey) {
+    currentPickingDirection = dirKey;
+    const pickerModal = document.getElementById('wheel-picker-modal');
+    const searchInput = document.getElementById('wheel-picker-search');
+    const listContainer = document.getElementById('wheel-picker-list');
+    const dirTitle = document.getElementById('wheel-picker-dir-title');
+
+    if (!pickerModal || !listContainer) return;
+
+    const dirMeta = WHEEL_DIRECTIONS.find(d => d.key === dirKey);
+    if (dirTitle && dirMeta) {
+      dirTitle.textContent = `选择书签绑定至 [${dirMeta.arrow} ${dirMeta.label}]`;
+    }
+
+    if (searchInput) searchInput.value = '';
+
+    const renderList = async (query = '') => {
+      let bookmarks = [];
+      if (typeof window.TabulaStorage !== 'undefined') {
+        bookmarks = await window.TabulaStorage.getAll();
+      }
+
+      if (query.trim()) {
+        const q = query.toLowerCase();
+        bookmarks = bookmarks.filter(b => 
+          (b.title && b.title.toLowerCase().includes(q)) || 
+          (b.url && b.url.toLowerCase().includes(q)) ||
+          (b.alias && b.alias.toLowerCase().includes(q))
+        );
+      }
+
+      if (bookmarks.length === 0) {
+        listContainer.innerHTML = '<div class="picker-empty-tip">未找到匹配的书签</div>';
+        return;
+      }
+
+      listContainer.innerHTML = bookmarks.map(b => `
+        <div class="picker-item" data-id="${b.id}">
+          <span class="picker-item-icon">${getIconHTML(b.icon)}</span>
+          <div class="picker-item-info">
+            <div class="picker-item-title">${escapeHTML(b.title || b.url)}</div>
+            <div class="picker-item-url">${escapeHTML(b.url)}</div>
+          </div>
+        </div>
+      `).join('');
+    };
+
+    await renderList();
+    pickerModal.style.display = 'flex';
+    if (searchInput) searchInput.focus();
+  }
+
+  function bindWheelTabEvents() {
+    const enableToggle = document.getElementById('wheel-enabled-toggle');
+    const delaySlider = document.getElementById('wheel-delay-slider');
+    const delayVal = document.getElementById('wheel-delay-val');
+    const newtabToggle = document.getElementById('wheel-newtab-toggle');
+    const slotsContainer = document.getElementById('wheel-slots-list');
+    const btnRefresh = document.getElementById('btn-refresh-wheel-slots');
+
+    const pickerModal = document.getElementById('wheel-picker-modal');
+    const pickerClose = document.getElementById('wheel-picker-close');
+    const pickerSearch = document.getElementById('wheel-picker-search');
+    const pickerList = document.getElementById('wheel-picker-list');
+
+    if (enableToggle) {
+      enableToggle.addEventListener('change', async (e) => {
+        await updateConfig({ wheelEnabled: e.target.checked });
+      });
+    }
+
+    if (delaySlider) {
+      delaySlider.addEventListener('input', (e) => {
+        const val = parseInt(e.target.value, 10);
+        if (delayVal) delayVal.textContent = `${val}ms`;
+        config.wheelTriggerDelay = val;
+      });
+      delaySlider.addEventListener('change', async (e) => {
+        await updateConfig({ wheelTriggerDelay: parseInt(e.target.value, 10) });
+      });
+    }
+
+    if (newtabToggle) {
+      newtabToggle.addEventListener('change', async (e) => {
+        await updateConfig({ wheelOpenNewTab: e.target.checked });
+      });
+    }
+
+    if (btnRefresh) {
+      btnRefresh.addEventListener('click', async () => {
+        if (typeof TabulaWheel !== 'undefined' && TabulaWheel.refreshAutoSlots) {
+          await TabulaWheel.refreshAutoSlots();
+        }
+        await renderWheelTabUI();
+      });
+    }
+
+    if (slotsContainer) {
+      slotsContainer.addEventListener('click', async (e) => {
+        const pickBtn = e.target.closest('.btn-pick-bm');
+        if (pickBtn) {
+          const dir = pickBtn.getAttribute('data-dir');
+          openBookmarkPicker(dir);
+          return;
+        }
+
+        const autoBtn = e.target.closest('.btn-auto-bm');
+        if (autoBtn) {
+          const dir = autoBtn.getAttribute('data-dir');
+          const slots = { ...(config.wheelSlots || {}) };
+          slots[dir] = { mode: 'auto', bookmarkId: null };
+          await updateConfig({ wheelSlots: slots });
+          if (typeof TabulaWheel !== 'undefined' && TabulaWheel.refreshAutoSlots) {
+            await TabulaWheel.refreshAutoSlots();
+          }
+          await renderWheelTabUI();
+          return;
+        }
+
+        const clearBtn = e.target.closest('.btn-clear-bm');
+        if (clearBtn) {
+          const dir = clearBtn.getAttribute('data-dir');
+          const slots = { ...(config.wheelSlots || {}) };
+          slots[dir] = { mode: 'custom', bookmarkId: null };
+          await updateConfig({ wheelSlots: slots });
+          await renderWheelTabUI();
+          return;
+        }
+      });
+    }
+
+    if (pickerClose && pickerModal) {
+      pickerClose.addEventListener('click', () => {
+        pickerModal.style.display = 'none';
+        currentPickingDirection = null;
+      });
+    }
+
+    if (pickerSearch && pickerList) {
+      pickerSearch.addEventListener('input', async (e) => {
+        const query = e.target.value.trim().toLowerCase();
+        let bookmarks = [];
+        if (typeof window.TabulaStorage !== 'undefined') {
+          bookmarks = await window.TabulaStorage.getAll();
+        }
+        if (query) {
+          bookmarks = bookmarks.filter(b => 
+            (b.title && b.title.toLowerCase().includes(query)) || 
+            (b.url && b.url.toLowerCase().includes(query)) ||
+            (b.alias && b.alias.toLowerCase().includes(query))
+          );
+        }
+        if (bookmarks.length === 0) {
+          pickerList.innerHTML = '<div class="picker-empty-tip">未找到匹配的书签</div>';
+          return;
+        }
+        pickerList.innerHTML = bookmarks.map(b => `
+          <div class="picker-item" data-id="${b.id}">
+            <span class="picker-item-icon">${getIconHTML(b.icon)}</span>
+            <div class="picker-item-info">
+              <div class="picker-item-title">${escapeHTML(b.title || b.url)}</div>
+              <div class="picker-item-url">${escapeHTML(b.url)}</div>
+            </div>
+          </div>
+        `).join('');
+      });
+    }
+
+    if (pickerList) {
+      pickerList.addEventListener('click', async (e) => {
+        const item = e.target.closest('.picker-item');
+        if (item && currentPickingDirection) {
+          const bmId = item.getAttribute('data-id');
+          const slots = { ...(config.wheelSlots || {}) };
+          slots[currentPickingDirection] = { mode: 'custom', bookmarkId: bmId };
+          await updateConfig({ wheelSlots: slots });
+          if (pickerModal) pickerModal.style.display = 'none';
+          currentPickingDirection = null;
+          await renderWheelTabUI();
+        }
+      });
+    }
+  }
+
+  /**
+   * 安全获取配置副本
+   */
+  function getConfig() {
+    return structuredClone(config);
+  }
+
+  /**
+   * 单一配置中心安全更新方法 (处理 wheelSlots 深度合并并派发全局广播)
+   */
+  async function updateConfig(patch) {
+    config = {
+      ...config,
+      ...patch,
+      wheelSlots: patch.wheelSlots
+        ? {
+            ...config.wheelSlots,
+            ...patch.wheelSlots
+          }
+        : config.wheelSlots
+    };
+
+    await saveConfig();
+
+    // 广播配置变更事件
+    window.dispatchEvent(
+      new CustomEvent('tabula:config-changed', {
+        detail: {
+          patch: structuredClone(patch),
+          config: structuredClone(config)
+        }
+      })
+    );
+
+    return structuredClone(config);
   }
 
   return {
@@ -797,15 +1155,23 @@ const TabulaSettings = (function () {
       await applyVisualStyles();
 
       // 同步 UI 状态（滑块位置）
-      document.getElementById('search-width-slider').value = config.searchWidth || 560;
-      document.getElementById('search-backdrop-blur-slider').value = config.searchBackdropBlur || 20;
-      document.getElementById('search-opacity-slider').value = config.searchOpacity || 0.1;
-      document.getElementById('wp-blur-slider').value = config.wpBlur || 0;
-      document.getElementById('wp-brightness-slider').value = config.wpBrightness || 1.0;
-      document.getElementById('search-left-slider').value = config.searchLeft || 50;
-      document.getElementById('search-top-slider').value = config.searchTop || 45;
+      const swSlider = document.getElementById('search-width-slider');
+      if (swSlider) swSlider.value = config.searchWidth || 560;
+      const sbbSlider = document.getElementById('search-backdrop-blur-slider');
+      if (sbbSlider) sbbSlider.value = config.searchBackdropBlur || 20;
+      const soSlider = document.getElementById('search-opacity-slider');
+      if (soSlider) soSlider.value = config.searchOpacity || 0.1;
+      const wbSlider = document.getElementById('wp-blur-slider');
+      if (wbSlider) wbSlider.value = config.wpBlur || 0;
+      const wbrSlider = document.getElementById('wp-brightness-slider');
+      if (wbrSlider) wbrSlider.value = config.wpBrightness || 1.0;
+      const slSlider = document.getElementById('search-left-slider');
+      if (slSlider) slSlider.value = config.searchLeft || 50;
+      const stSlider = document.getElementById('search-top-slider');
+      if (stSlider) stSlider.value = config.searchTop || 45;
 
       bindEvents();
+      bindWheelTabEvents();
       
       // ==== NEW Phase 2.9: 动力学解禁 ====
       // 在首帧瞬时定位完成后（约50ms），移除 transition 屏蔽类，恢复动态滑块的丝滑手感
@@ -817,6 +1183,15 @@ const TabulaSettings = (function () {
       console.log("[TabulaSettings] Loaded and applied.");
     },
     
+    // 给外部安全获取配置
+    getConfig,
+
+    // 给外部安全更新配置并广播
+    updateConfig,
+
+    // 渲染轮盘设置 UI
+    renderWheelTabUI,
+
     // 给 search.js 导出使用的查询前缀
     getSearchPrefix() {
       if (config.engine === 'custom') {
@@ -828,3 +1203,4 @@ const TabulaSettings = (function () {
 })();
 
 window.TabulaSettings = TabulaSettings;
+

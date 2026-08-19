@@ -519,6 +519,38 @@ body.is-navigating #bookmark-dropdown-container {
   display: block;
 }
 
+/* 图标自动抓取按钮 */
+.icon-fetch-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 40px;
+  padding: 0 10px;
+  font-size: 0.82rem;
+  background: rgba(0, 122, 255, 0.12);
+  border: 1px solid rgba(0, 122, 255, 0.3);
+  border-radius: 8px;
+  color: #60a5fa;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.icon-fetch-btn:hover {
+  border-color: rgba(0, 122, 255, 0.6);
+  background: rgba(0, 122, 255, 0.22);
+  color: #93c5fd;
+  box-shadow: 0 0 10px rgba(0, 122, 255, 0.25);
+}
+
+.icon-fetch-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  border-color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.4);
+}
+
 /* 图标重置按钮 — 标准按钮风格且与输入框对齐 */
 .icon-reset-btn {
   flex-shrink: 0;
@@ -526,8 +558,8 @@ body.is-navigating #bookmark-dropdown-container {
   align-items: center;
   gap: 4px;
   height: 40px; /* 同 .bm-edit-form input 的高度 */
-  padding: 0 12px;
-  font-size: 0.85rem;
+  padding: 0 10px;
+  font-size: 0.82rem;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
@@ -543,13 +575,13 @@ body.is-navigating #bookmark-dropdown-container {
   color: #ff8080;
 }
 
-/* 图标右侧水平列（Alias + 重置按钮） */
+/* 图标右侧水平列（Alias + 抓取 + 重置按钮） */
 .edit-right-col {
   flex: 1;
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   min-width: 0; /* 核心：允许内部元素收缩 */
 }
 
@@ -1634,3 +1666,540 @@ body.is-navigating #bookmark-dropdown-container {
   mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cellipse cx='12' cy='5' rx='9' ry='3'/%3E%3Cpath d='M21 12c0 1.66-4 3-9 3s-9-1.34-9-3'/%3E%3Cpath d='M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5'/%3E%3C/svg%3E");
   -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cellipse cx='12' cy='5' rx='9' ry='3'/%3E%3Cpath d='M21 12c0 1.66-4 3-9 3s-9-1.34-9-3'/%3E%3Cpath d='M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5'/%3E%3C/svg%3E");
 }
+
+/* Wheel / Compass Icon */
+.i-wheel {
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpolygon points='16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76'/%3E%3C/svg%3E");
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpolygon points='16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76'/%3E%3C/svg%3E");
+}
+
+/* ==========================================================================
+   Radial Wheel Menu (Quicker 风格左键长按书签轮盘)
+   ========================================================================== */
+
+.wheel-menu-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1500;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: opacity 0.15s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.wheel-menu-overlay.active {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.wheel-menu-disc {
+  position: absolute;
+  width: 280px;
+  height: 280px;
+  transform: translate(-50%, -50%) scale(0.92);
+  border-radius: 50%;
+  background: rgba(18, 20, 26, 0.78);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+  opacity: 0;
+  transition: opacity 0.15s cubic-bezier(0.16, 1, 0.3, 1), transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: auto;
+}
+
+.wheel-menu-overlay.active .wheel-menu-disc {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.wheel-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.wheel-sector-path {
+  fill: rgba(255, 255, 255, 0.02);
+  stroke: rgba(255, 255, 255, 0.08);
+  stroke-width: 1;
+  cursor: pointer;
+  transition: fill 0.1s ease, stroke 0.1s ease, filter 0.1s ease;
+}
+
+.wheel-sector-path:hover,
+.wheel-sector-path.active {
+  fill: rgba(88, 101, 242, 0.36);
+  stroke: rgba(147, 160, 255, 0.85);
+  stroke-width: 1.5;
+  filter: drop-shadow(0 0 6px rgba(88, 101, 242, 0.45));
+}
+
+.wheel-slots-container {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.wheel-slot-node {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 58px;
+  height: 52px;
+  text-align: center;
+  pointer-events: none;
+  transition: transform 0.12s cubic-bezier(0.16, 1, 0.3, 1), color 0.12s ease;
+}
+
+.wheel-slot-node.active {
+  transform: translate(-50%, -50%) scale(1.12);
+}
+
+.slot-icon-wrap {
+  font-size: 18px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2px;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.slot-icon-wrap .bm-icon-img {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+.slot-title-wrap {
+  font-size: 10px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.72);
+  max-width: 54px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+.wheel-slot-node.active .slot-title-wrap {
+  color: #fff;
+  font-weight: 600;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+}
+
+.slot-dir-badge {
+  position: absolute;
+  top: -4px;
+  right: 4px;
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.35);
+  font-family: monospace;
+}
+
+.wheel-slot-node.is-empty .slot-icon-wrap,
+.wheel-slot-node.is-missing .slot-icon-wrap {
+  opacity: 0.35;
+}
+
+.wheel-slot-node.is-empty .slot-title-wrap,
+.wheel-slot-node.is-missing .slot-title-wrap {
+  opacity: 0.4;
+  font-style: italic;
+}
+
+.wheel-center-hub {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  background: rgba(12, 14, 18, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 6px;
+  box-sizing: border-box;
+  pointer-events: none;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.wheel-center-hub.has-selection {
+  border-color: rgba(88, 101, 242, 0.6);
+  background: rgba(18, 22, 34, 0.95);
+}
+
+.center-hub-content {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.wheel-center-hub.has-selection .center-hub-content {
+  display: flex;
+}
+
+.wheel-center-hub.has-selection .center-default-hint {
+  display: none;
+}
+
+.center-icon-wrap {
+  font-size: 16px;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+
+.center-icon-wrap .bm-icon-img {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+}
+
+.center-title-text {
+  font-size: 10px;
+  font-weight: 600;
+  color: #fff;
+  max-width: 74px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+.center-domain-text {
+  font-size: 8px;
+  color: rgba(255, 255, 255, 0.5);
+  max-width: 74px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.center-default-hint {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.hint-gesture {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.75);
+  font-weight: 500;
+}
+
+.hint-key {
+  font-size: 8px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* Switch Controls (iOS Toggle Switches) */
+.switch-control {
+  position: relative;
+  display: inline-block;
+  width: 38px;
+  height: 20px;
+}
+
+.switch-control input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.switch-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.16);
+  transition: 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.switch-slider:before {
+  position: absolute;
+  content: "";
+  height: 14px;
+  width: 14px;
+  left: 2px;
+  bottom: 2px;
+  background-color: #fff;
+  transition: 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.switch-control input:checked + .switch-slider {
+  background-color: #5865f2;
+  border-color: #5865f2;
+}
+
+.switch-control input:checked + .switch-slider:before {
+  transform: translateX(18px);
+}
+
+/* Settings Wheel Tab Slot Editor */
+.wheel-slots-section {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.wheel-slots-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.wheel-slots-header label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-color, #f0f0f5);
+}
+
+.wheel-slots-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.wheel-slot-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.wheel-slot-card:hover {
+  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.slot-card-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.slot-card-arrow {
+  font-size: 13px;
+  font-weight: 700;
+  color: #5865f2;
+  font-family: monospace;
+}
+
+.slot-card-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-color, #e0e0e8);
+  flex: 1;
+}
+
+.slot-badge {
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.slot-badge.auto {
+  background: rgba(88, 101, 242, 0.2);
+  color: #828df8;
+  border: 1px solid rgba(88, 101, 242, 0.35);
+}
+
+.slot-badge.custom {
+  background: rgba(46, 204, 113, 0.2);
+  color: #2ecc71;
+  border: 1px solid rgba(46, 204, 113, 0.35);
+}
+
+.slot-badge.missing {
+  background: rgba(231, 76, 60, 0.2);
+  color: #e74c3c;
+  border: 1px solid rgba(231, 76, 60, 0.35);
+}
+
+.slot-badge.empty {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.slot-card-body {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.slot-card-icon {
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+}
+
+.slot-card-icon .bm-icon-img {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+.slot-card-title {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.85);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+
+.slot-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.slot-card-actions .action-btn {
+  font-size: 10px;
+  padding: 3px 8px;
+  height: auto;
+}
+
+/* Bookmark Picker Popover Modal */
+.wheel-picker-overlay {
+  z-index: 2100;
+}
+
+.wheel-picker-card {
+  background: #181a20;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  width: 440px;
+  max-height: 520px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+  padding: 16px;
+  box-sizing: border-box;
+  gap: 12px;
+}
+
+.wheel-picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.wheel-picker-header h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.wheel-picker-list {
+  max-height: 360px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.picker-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.picker-item:hover {
+  background: rgba(88, 101, 242, 0.15);
+  border-color: rgba(88, 101, 242, 0.4);
+}
+
+.picker-item-icon {
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+.picker-item-icon .bm-icon-img {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+}
+
+.picker-item-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.picker-item-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.picker-item-url {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.45);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.picker-empty-tip {
+  text-align: center;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.4);
+  padding: 24px 0;
+}
+
