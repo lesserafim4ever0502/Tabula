@@ -19,9 +19,9 @@ const TabulaSettings = (function () {
     searchTop: 45,
     // Radial Wheel 轮盘配置
     wheelEnabled: true,
-    wheelTriggerMode: 'both', // 'both' (中键+长按) | 'middle' (仅中键) | 'left_long' (仅左键长按)
-    wheelTriggerDelay: 320,
     wheelOpenNewTab: true,
+    wheelBgColor: '#12141a',
+    wheelBgImage: '',
     wheelSlots: {
       n:  { mode: 'auto', bookmarkId: null },
       ne: { mode: 'auto', bookmarkId: null },
@@ -849,21 +849,27 @@ const TabulaSettings = (function () {
    */
   async function renderWheelTabUI() {
     const enableToggle = document.getElementById('wheel-enabled-toggle');
-    const modeSelect = document.getElementById('wheel-trigger-mode-select');
-    const delaySlider = document.getElementById('wheel-delay-slider');
-    const delayVal = document.getElementById('wheel-delay-val');
-    const delayRow = document.getElementById('wheel-delay-row');
     const newtabToggle = document.getElementById('wheel-newtab-toggle');
     const slotsContainer = document.getElementById('wheel-slots-list');
+    const bgColorInput = document.getElementById('wheel-bgcolor-input');
+    const bgImageName = document.getElementById('wheel-bgimage-name');
+    const bgImageClear = document.getElementById('wheel-bgimage-clear');
 
     if (!enableToggle || !slotsContainer) return;
 
     enableToggle.checked = config.wheelEnabled !== false;
-    if (modeSelect) modeSelect.value = config.wheelTriggerMode || 'both';
-    if (delaySlider) delaySlider.value = config.wheelTriggerDelay || 320;
-    if (delayVal) delayVal.textContent = `${config.wheelTriggerDelay || 320}ms`;
-    if (delayRow) delayRow.style.display = (config.wheelTriggerMode === 'middle') ? 'none' : 'flex';
-    if (newtabToggle) newtabToggle.checked = !!config.wheelOpenNewTab;
+    if (newtabToggle) newtabToggle.checked = config.wheelOpenNewTab !== false;
+    if (bgColorInput) bgColorInput.value = config.wheelBgColor || '#12141a';
+
+    if (bgImageName && bgImageClear) {
+      if (config.wheelBgImage) {
+        bgImageName.textContent = 'Custom Image Set';
+        bgImageClear.style.display = 'inline-block';
+      } else {
+        bgImageName.textContent = '';
+        bgImageClear.style.display = 'none';
+      }
+    }
 
     let allBookmarks = [];
     if (typeof window.TabulaStorage !== 'undefined') {
@@ -994,13 +1000,15 @@ const TabulaSettings = (function () {
 
   function bindWheelTabEvents() {
     const enableToggle = document.getElementById('wheel-enabled-toggle');
-    const modeSelect = document.getElementById('wheel-trigger-mode-select');
-    const delaySlider = document.getElementById('wheel-delay-slider');
-    const delayVal = document.getElementById('wheel-delay-val');
-    const delayRow = document.getElementById('wheel-delay-row');
     const newtabToggle = document.getElementById('wheel-newtab-toggle');
     const slotsContainer = document.getElementById('wheel-slots-list');
     const btnRefresh = document.getElementById('btn-refresh-wheel-slots');
+
+    const bgColorInput = document.getElementById('wheel-bgcolor-input');
+    const bgColorReset = document.getElementById('wheel-bgcolor-reset');
+    const bgImageBtn = document.getElementById('wheel-bgimage-btn');
+    const bgImageFile = document.getElementById('wheel-bgimage-file');
+    const bgImageClear = document.getElementById('wheel-bgimage-clear');
 
     const pickerModal = document.getElementById('wheel-picker-modal');
     const pickerClose = document.getElementById('wheel-picker-close');
@@ -1013,30 +1021,49 @@ const TabulaSettings = (function () {
       });
     }
 
-    if (modeSelect) {
-      modeSelect.addEventListener('change', async (e) => {
-        const val = e.target.value;
-        if (delayRow) {
-          delayRow.style.display = (val === 'middle') ? 'none' : 'flex';
-        }
-        await updateConfig({ wheelTriggerMode: val });
-      });
-    }
-
-    if (delaySlider) {
-      delaySlider.addEventListener('input', (e) => {
-        const val = parseInt(e.target.value, 10);
-        if (delayVal) delayVal.textContent = `${val}ms`;
-        config.wheelTriggerDelay = val;
-      });
-      delaySlider.addEventListener('change', async (e) => {
-        await updateConfig({ wheelTriggerDelay: parseInt(e.target.value, 10) });
-      });
-    }
-
     if (newtabToggle) {
       newtabToggle.addEventListener('change', async (e) => {
         await updateConfig({ wheelOpenNewTab: e.target.checked });
+      });
+    }
+
+    if (bgColorInput) {
+      bgColorInput.addEventListener('input', async (e) => {
+        await updateConfig({ wheelBgColor: e.target.value });
+      });
+    }
+
+    if (bgColorReset) {
+      bgColorReset.addEventListener('click', async () => {
+        if (bgColorInput) bgColorInput.value = '#12141a';
+        await updateConfig({ wheelBgColor: '#12141a' });
+      });
+    }
+
+    if (bgImageBtn && bgImageFile) {
+      bgImageBtn.addEventListener('click', () => {
+        bgImageFile.click();
+      });
+
+      bgImageFile.addEventListener('change', (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+          const base64 = event.target.result;
+          await updateConfig({ wheelBgImage: base64 });
+          await renderWheelTabUI();
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    if (bgImageClear) {
+      bgImageClear.addEventListener('click', async () => {
+        await updateConfig({ wheelBgImage: '' });
+        if (bgImageFile) bgImageFile.value = '';
+        await renderWheelTabUI();
       });
     }
 

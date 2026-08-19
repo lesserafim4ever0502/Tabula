@@ -1068,8 +1068,12 @@ body.is-navigating #bookmark-dropdown-container {
 .modal-body {
   padding: 36px 32px; /* 统一上下更大的呼吸空间 */
   overflow-y: auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
   flex: 1;
   display: grid; /* 新增: 利用 Grid 完成重叠占位布局 */
+  min-width: 0;
+  width: 100%;
 }
 
 /* Tab 面板：Grid 重叠技巧实现高度同步与垂直居中分布 */
@@ -1956,38 +1960,47 @@ body.is-navigating #bookmark-dropdown-container {
 
 /* Settings Wheel Tab Slot Editor */
 .wheel-slots-section {
-  margin-top: 24px;
+  margin-top: 16px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .wheel-slots-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
+  margin-bottom: 2px;
 }
 
 .wheel-slots-header label {
   font-size: 13px;
   font-weight: 600;
   color: var(--text-color, #f0f0f5);
+  white-space: nowrap;
 }
 
 .wheel-slots-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .wheel-slot-card {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 8px;
-  padding: 10px 12px;
+  padding: 8px 10px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
+  min-width: 0;
+  box-sizing: border-box;
   transition: border-color 0.15s ease, background 0.15s ease;
 }
 
@@ -2000,6 +2013,7 @@ body.is-navigating #bookmark-dropdown-container {
   display: flex;
   align-items: center;
   gap: 6px;
+  min-width: 0;
 }
 
 .slot-card-arrow {
@@ -2014,6 +2028,9 @@ body.is-navigating #bookmark-dropdown-container {
   font-weight: 600;
   color: var(--text-color, #e0e0e8);
   flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .slot-badge {
@@ -2023,6 +2040,7 @@ body.is-navigating #bookmark-dropdown-container {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.3px;
+  white-space: nowrap;
 }
 
 .slot-badge.auto {
@@ -2053,6 +2071,7 @@ body.is-navigating #bookmark-dropdown-container {
   display: flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
 }
 
 .slot-card-icon {
@@ -2062,6 +2081,7 @@ body.is-navigating #bookmark-dropdown-container {
   justify-content: center;
   width: 22px;
   height: 22px;
+  flex-shrink: 0;
 }
 
 .slot-card-icon .bm-icon-img {
@@ -2083,13 +2103,36 @@ body.is-navigating #bookmark-dropdown-container {
 .slot-card-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 6px;
+  gap: 4px;
+  flex-wrap: wrap;
 }
 
 .slot-card-actions .action-btn {
   font-size: 10px;
   padding: 3px 8px;
   height: auto;
+}
+
+.color-picker-input {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: 32px;
+  height: 26px;
+  background-color: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.color-picker-input::-webkit-color-swatch-wrapper {
+  padding: 2px;
+}
+
+.color-picker-input::-webkit-color-swatch {
+  border: none;
+  border-radius: 4px;
 }
 
 /* Bookmark Picker Popover Modal */

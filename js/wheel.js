@@ -108,9 +108,9 @@ const TabulaWheel = (function () {
     }
     return {
       wheelEnabled: true,
-      wheelTriggerMode: 'both',
-      wheelTriggerDelay: 320,
       wheelOpenNewTab: true,
+      wheelBgColor: '#12141a',
+      wheelBgImage: '',
       wheelSlots: {
         n:  { mode: 'auto', bookmarkId: null },
         ne: { mode: 'auto', bookmarkId: null },
@@ -231,6 +231,26 @@ const TabulaWheel = (function () {
   }
 
   /**
+   * 应用轮盘主题自定义 (背景颜色 / 背景图片)
+   */
+  function applyWheelTheme() {
+    if (!discEl) return;
+    const config = getConfig();
+    const bgColor = config.wheelBgColor || '#12141a';
+    const bgImage = config.wheelBgImage || '';
+
+    discEl.style.backgroundColor = bgColor;
+    if (bgImage) {
+      discEl.style.backgroundImage = `url("${bgImage}")`;
+      discEl.style.backgroundSize = 'cover';
+      discEl.style.backgroundPosition = 'center';
+      discEl.style.backgroundRepeat = 'no-repeat';
+    } else {
+      discEl.style.backgroundImage = 'none';
+    }
+  }
+
+  /**
    * 初始化一次性构建轮盘 DOM / SVG 骨架
    */
   function buildDOM() {
@@ -246,6 +266,7 @@ const TabulaWheel = (function () {
     // 1. 轮盘拟态玻璃圆盘容器
     discEl = document.createElement('div');
     discEl.className = 'wheel-menu-disc';
+    applyWheelTheme();
 
     // 2. SVG 扇区层
     const svgNS = "http://www.w3.org/2000/svg";
@@ -269,7 +290,7 @@ const TabulaWheel = (function () {
     }
     discEl.appendChild(svgEl);
 
-    // 3. 8 方向图标与简略标签层 (极坐标绝对定位)
+    // 3. 8 方向图标与简略标签层 (极坐标绝对定位，无方向箭头)
     slotNodes = [];
     const slotsContainer = document.createElement('div');
     slotsContainer.className = 'wheel-slots-container';
@@ -288,7 +309,6 @@ const TabulaWheel = (function () {
       slotNode.innerHTML = `
         <div class="slot-icon-wrap"></div>
         <div class="slot-title-wrap"></div>
-        <div class="slot-dir-badge">${DIRECTION_METAS[i].arrow}</div>
       `;
 
       slotsContainer.appendChild(slotNode);
@@ -303,11 +323,11 @@ const TabulaWheel = (function () {
       <div class="center-hub-content">
         <div class="center-icon-wrap" id="wheel-center-icon"></div>
         <div class="center-title-text" id="wheel-center-title">Tabula</div>
-        <div class="center-domain-text" id="wheel-center-domain">松开或点击打开</div>
+        <div class="center-domain-text" id="wheel-center-domain">松开打开</div>
       </div>
       <div class="center-default-hint" id="wheel-center-hint">
-        <span class="hint-gesture">划过释放</span>
-        <span class="hint-key">1~8 / 点选</span>
+        <span class="hint-gesture">滑到对应区域</span>
+        <span class="hint-key">松开中键打开</span>
       </div>
     `;
     discEl.appendChild(centerHubEl);
@@ -461,6 +481,9 @@ const TabulaWheel = (function () {
     console.log('[Wheel DEBUG] showWheel() at', clientX, clientY);
     if (!discEl) buildDOM();
 
+    // 实时同步外观主题 (背景颜色与背景图片)
+    applyWheelTheme();
+
     // 立即切换为 GESTURE_ACTIVE
     currentState = STATE_GESTURE_ACTIVE;
     activeSectorIndex = -1;
@@ -603,89 +626,23 @@ const TabulaWheel = (function () {
 
   function handlePointerDown(e) {
     const config = getConfig();
-    const triggerMode = config.wheelTriggerMode || 'both'; // 'both' | 'middle' | 'left_long'
 
-    const isDrawerOpen = (typeof TabulaDrawer !== 'undefined' && TabulaDrawer.isOpen) 
-      ? TabulaDrawer.isOpen() 
-      : (document.getElementById('drawer-container') && document.getElementById('drawer-container').classList.contains('open'));
-    const settingsEl = document.getElementById('settings-modal');
-    const isSettingsOpen = settingsEl && (settingsEl.classList.contains('active') || (settingsEl.style.display !== 'none' && settingsEl.style.display !== ''));
-    
-    const blocked = e.target.closest(
-      'input, textarea, button, a, select, [contenteditable="true"], ' +
-      '.search-box-wrapper, #drawer-container, #settings-modal, .floating-settings-btn, ' +
-      '#wheel-picker-modal'
-    );
+    // 严格限制：仅响应鼠标中键 (button === 1 / 滚轮按下)
+    if (e.button !== 1) return;
+    if (config.wheelEnabled === false) return;
 
-    console.log('[Wheel DEBUG] pointerdown', {
-      target: e.target,
-      button: e.button,
-      buttons: e.buttons,
-      pointerType: e.pointerType,
-      state: currentState,
-      triggerMode,
-      wheelEnabled: config?.wheelEnabled,
-      isDrawerOpen,
-      isSettingsOpen,
-      blockedBy: blocked,
-      isAllowable: !blocked && !isDrawerOpen && !isSettingsOpen
-    });
+    if (e.cancelable) e.preventDefault();
 
-    // 1. 鼠标中键 (button === 1 / 滚轮按下)：零延迟瞬时激活
-    if (e.button === 1) {
-      if (triggerMode !== 'middle' && triggerMode !== 'both') return;
-      if (config.wheelEnabled === false) return;
-
-      if (e.cancelable) e.preventDefault();
-
-      // 若当前轮盘已在开启或驻留状态，中键点击视为关闭切换 (Toggle)
-      if (currentState === STATE_PINNED || currentState === STATE_GESTURE_ACTIVE) {
-        hideWheel();
-        return;
-      }
-
-      if (!isAllowableSurface(e.target)) return;
-
-      console.log('[Wheel DEBUG] Middle button instant activation at', e.clientX, e.clientY);
-      showWheel(e.clientX, e.clientY);
+    // 若当前轮盘已在开启或驻留状态，中键点击视为关闭切换 (Toggle)
+    if (currentState === STATE_PINNED || currentState === STATE_GESTURE_ACTIVE) {
+      hideWheel();
       return;
     }
 
-    // 2. 鼠标左键 (button === 0)：长按等待激活
-    if (e.button === 0) {
-      if (triggerMode !== 'left_long' && triggerMode !== 'both') return;
-      if (e.pointerType && e.pointerType !== 'mouse') return;
-      if (config.wheelEnabled === false) return;
+    if (!isAllowableSurface(e.target)) return;
 
-      // 若当前已在 PINNED 态，由后续 click 处理
-      if (currentState === STATE_PINNED) {
-        return;
-      }
-
-      if (!isAllowableSurface(e.target)) {
-        return;
-      }
-
-      // 启动长按等待
-      currentState = STATE_PRESS_PENDING;
-      gestureOrigin = { x: e.clientX, y: e.clientY };
-
-      if (longPressTimer) clearTimeout(longPressTimer);
-      const delay = Number(config.wheelTriggerDelay) || 320;
-
-      longPressTimer = setTimeout(() => {
-        longPressTimer = null;
-        console.log('[Wheel DEBUG] long press timer fired', {
-          state: currentState,
-          startX: gestureOrigin.x,
-          startY: gestureOrigin.y,
-          delay
-        });
-        if (currentState === STATE_PRESS_PENDING) {
-          showWheel(gestureOrigin.x, gestureOrigin.y);
-        }
-      }, delay);
-    }
+    console.log('[Wheel DEBUG] Middle button instant activation at', e.clientX, e.clientY);
+    showWheel(e.clientX, e.clientY);
   }
 
   function handlePointerMove(e) {
@@ -870,6 +827,7 @@ const TabulaWheel = (function () {
 
         // 监听 Settings 配置更新广播
         window.addEventListener('tabula:config-changed', async () => {
+          applyWheelTheme();
           await resolveSlots();
           updateSlotsContent();
           if (currentState === STATE_PINNED || currentState === STATE_GESTURE_ACTIVE) {
