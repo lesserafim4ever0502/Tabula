@@ -177,7 +177,7 @@
           <div class="tab-pane" id="tab-wheel">
             <div class="setting-group">
               <label>Radial Gesture Wheel (书签轮盘菜单)</label>
-              <p class="section-desc">在起始页空白区域按住鼠标左键弹出 Quicker 风格 8 方向书签轮盘。</p>
+              <p class="section-desc">在起始页空白区域通过鼠标中键或长按弹出 Quicker 风格 8 方向书签轮盘。</p>
               
               <div class="bg-setting-list">
                 <div class="bg-item">
@@ -187,9 +187,17 @@
                     <span class="switch-slider"></span>
                   </label>
                 </div>
-                <div class="bg-item" title="长按鼠标左键触发轮盘的延时 (ms)">
-                  <span>Trigger Delay:</span>
-                  <div style="display: flex; align-items: center; gap: 10px; width: 60%;">
+                <div class="bg-item" title="选择轮盘唤醒触发方式">
+                  <span>Trigger Method:</span>
+                  <select id="wheel-trigger-mode-select" class="setting-input" style="width: auto; max-width: 240px; padding: 4px 8px; font-size: 13px;">
+                    <option value="both">中键即开 + 左键长按 (推荐)</option>
+                    <option value="middle">仅鼠标中键 (零延迟即按即开)</option>
+                    <option value="left_long">仅鼠标左键长按</option>
+                  </select>
+                </div>
+                <div class="bg-item" id="wheel-delay-row" title="长按鼠标左键触发轮盘的延时 (ms)">
+                  <span>Left Long-Press Delay:</span>
+                  <div style="display: flex; align-items: center; gap: 10px; width: 55%;">
                     <input type="range" id="wheel-delay-slider" min="200" max="800" step="20" value="320" class="setting-slider" style="flex: 1;">
                     <span id="wheel-delay-val" style="font-size: 12px; min-width: 48px; color: var(--text-muted);">320ms</span>
                   </div>

@@ -596,6 +596,8 @@ const TabulaWheel = (function () {
 
   function handlePointerDown(e) {
     const config = getConfig();
+    const triggerMode = config.wheelTriggerMode || 'both'; // 'both' | 'middle' | 'left_long'
+
     const isDrawerOpen = (typeof TabulaDrawer !== 'undefined' && TabulaDrawer.isOpen) 
       ? TabulaDrawer.isOpen() 
       : (document.getElementById('drawer-container') && document.getElementById('drawer-container').classList.contains('open'));
@@ -614,6 +616,7 @@ const TabulaWheel = (function () {
       buttons: e.buttons,
       pointerType: e.pointerType,
       state: currentState,
+      triggerMode,
       wheelEnabled: config?.wheelEnabled,
       isDrawerOpen,
       isSettingsOpen,
@@ -621,39 +624,61 @@ const TabulaWheel = (function () {
       isAllowable: !blocked && !isDrawerOpen && !isSettingsOpen
     });
 
-    // 仅响应鼠标左键 (button === 0)
-    if (e.button !== 0) return;
-    if (e.pointerType && e.pointerType !== 'mouse') return;
-    if (config.wheelEnabled === false) return;
+    // 1. 鼠标中键 (button === 1 / 滚轮按下)：零延迟瞬时激活
+    if (e.button === 1) {
+      if (triggerMode !== 'middle' && triggerMode !== 'both') return;
+      if (config.wheelEnabled === false) return;
 
-    // 若当前已在 PINNED 态，由后续 click 处理
-    if (currentState === STATE_PINNED) {
-      return;
-    }
+      if (e.cancelable) e.preventDefault();
 
-    if (!isAllowableSurface(e.target)) {
-      return;
-    }
-
-    // 启动长按等待
-    currentState = STATE_PRESS_PENDING;
-    gestureOrigin = { x: e.clientX, y: e.clientY };
-
-    if (longPressTimer) clearTimeout(longPressTimer);
-    const delay = Number(config.wheelTriggerDelay) || 320;
-
-    longPressTimer = setTimeout(() => {
-      longPressTimer = null;
-      console.log('[Wheel DEBUG] long press timer fired', {
-        state: currentState,
-        startX: gestureOrigin.x,
-        startY: gestureOrigin.y,
-        delay
-      });
-      if (currentState === STATE_PRESS_PENDING) {
-        showWheel(gestureOrigin.x, gestureOrigin.y);
+      // 若当前轮盘已在开启或驻留状态，中键点击视为关闭切换 (Toggle)
+      if (currentState === STATE_PINNED || currentState === STATE_GESTURE_ACTIVE) {
+        hideWheel();
+        return;
       }
-    }, delay);
+
+      if (!isAllowableSurface(e.target)) return;
+
+      console.log('[Wheel DEBUG] Middle button instant activation at', e.clientX, e.clientY);
+      showWheel(e.clientX, e.clientY);
+      return;
+    }
+
+    // 2. 鼠标左键 (button === 0)：长按等待激活
+    if (e.button === 0) {
+      if (triggerMode !== 'left_long' && triggerMode !== 'both') return;
+      if (e.pointerType && e.pointerType !== 'mouse') return;
+      if (config.wheelEnabled === false) return;
+
+      // 若当前已在 PINNED 态，由后续 click 处理
+      if (currentState === STATE_PINNED) {
+        return;
+      }
+
+      if (!isAllowableSurface(e.target)) {
+        return;
+      }
+
+      // 启动长按等待
+      currentState = STATE_PRESS_PENDING;
+      gestureOrigin = { x: e.clientX, y: e.clientY };
+
+      if (longPressTimer) clearTimeout(longPressTimer);
+      const delay = Number(config.wheelTriggerDelay) || 320;
+
+      longPressTimer = setTimeout(() => {
+        longPressTimer = null;
+        console.log('[Wheel DEBUG] long press timer fired', {
+          state: currentState,
+          startX: gestureOrigin.x,
+          startY: gestureOrigin.y,
+          delay
+        });
+        if (currentState === STATE_PRESS_PENDING) {
+          showWheel(gestureOrigin.x, gestureOrigin.y);
+        }
+      }, delay);
+    }
   }
 
   function handlePointerMove(e) {
@@ -810,9 +835,21 @@ const TabulaWheel = (function () {
         buildDOM();
 
         // 注册 Pointer / Mouse 事件
-        document.addEventListener('pointerdown', handlePointerDown, { passive: true });
+        document.addEventListener('pointerdown', handlePointerDown);
         document.addEventListener('pointermove', handlePointerMove, { passive: true });
         document.addEventListener('pointerup', handlePointerUp, { passive: true });
+
+        // 拦截并支持鼠标中键点击 (auxclick & mousedown)
+        document.addEventListener('auxclick', (e) => {
+          if (e.button === 1 && isAllowableSurface(e.target)) {
+            if (e.cancelable) e.preventDefault();
+          }
+        });
+        document.addEventListener('mousedown', (e) => {
+          if (e.button === 1 && isAllowableSurface(e.target)) {
+            if (e.cancelable) e.preventDefault();
+          }
+        });
 
         // 阻止原生拖拽和选中文本干扰长按
         document.addEventListener('dragstart', (e) => {

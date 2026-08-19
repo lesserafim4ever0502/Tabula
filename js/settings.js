@@ -19,6 +19,7 @@ const TabulaSettings = (function () {
     searchTop: 45,
     // Radial Wheel 轮盘配置
     wheelEnabled: true,
+    wheelTriggerMode: 'both', // 'both' (中键+长按) | 'middle' (仅中键) | 'left_long' (仅左键长按)
     wheelTriggerDelay: 320,
     wheelOpenNewTab: false,
     wheelSlots: {
@@ -848,16 +849,20 @@ const TabulaSettings = (function () {
    */
   async function renderWheelTabUI() {
     const enableToggle = document.getElementById('wheel-enabled-toggle');
+    const modeSelect = document.getElementById('wheel-trigger-mode-select');
     const delaySlider = document.getElementById('wheel-delay-slider');
     const delayVal = document.getElementById('wheel-delay-val');
+    const delayRow = document.getElementById('wheel-delay-row');
     const newtabToggle = document.getElementById('wheel-newtab-toggle');
     const slotsContainer = document.getElementById('wheel-slots-list');
 
     if (!enableToggle || !slotsContainer) return;
 
     enableToggle.checked = config.wheelEnabled !== false;
+    if (modeSelect) modeSelect.value = config.wheelTriggerMode || 'both';
     if (delaySlider) delaySlider.value = config.wheelTriggerDelay || 320;
     if (delayVal) delayVal.textContent = `${config.wheelTriggerDelay || 320}ms`;
+    if (delayRow) delayRow.style.display = (config.wheelTriggerMode === 'middle') ? 'none' : 'flex';
     if (newtabToggle) newtabToggle.checked = !!config.wheelOpenNewTab;
 
     let allBookmarks = [];
@@ -989,8 +994,10 @@ const TabulaSettings = (function () {
 
   function bindWheelTabEvents() {
     const enableToggle = document.getElementById('wheel-enabled-toggle');
+    const modeSelect = document.getElementById('wheel-trigger-mode-select');
     const delaySlider = document.getElementById('wheel-delay-slider');
     const delayVal = document.getElementById('wheel-delay-val');
+    const delayRow = document.getElementById('wheel-delay-row');
     const newtabToggle = document.getElementById('wheel-newtab-toggle');
     const slotsContainer = document.getElementById('wheel-slots-list');
     const btnRefresh = document.getElementById('btn-refresh-wheel-slots');
@@ -1003,6 +1010,16 @@ const TabulaSettings = (function () {
     if (enableToggle) {
       enableToggle.addEventListener('change', async (e) => {
         await updateConfig({ wheelEnabled: e.target.checked });
+      });
+    }
+
+    if (modeSelect) {
+      modeSelect.addEventListener('change', async (e) => {
+        const val = e.target.value;
+        if (delayRow) {
+          delayRow.style.display = (val === 'middle') ? 'none' : 'flex';
+        }
+        await updateConfig({ wheelTriggerMode: val });
       });
     }
 
