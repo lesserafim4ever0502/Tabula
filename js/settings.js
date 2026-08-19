@@ -47,59 +47,75 @@ const TabulaSettings = (function () {
   let colorLayer, bgLayer;
   let customEngineWrapper, customEngineInput;
 
+  const isExtensionEnv = typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local;
+
+  async function processLoadedConfig(saved) {
+    if (saved) {
+      config = {
+        ...DEFAULT_CONFIG,
+        ...saved,
+        wheelSlots: {
+          ...DEFAULT_CONFIG.wheelSlots,
+          ...(saved.wheelSlots || {})
+        }
+      };
+      
+      // ==== 自动迁移逻辑：Base64 -> IndexedDB & 生成缩略图 ====
+      if (config.bgImage && config.bgImage.startsWith('data:image')) {
+        console.log("[Tabula] Migrating legacy Base64 wallpaper to IndexedDB...");
+        try {
+          const response = await fetch(config.bgImage);
+          const blob = await response.blob();
+          await TabulaIDB.setWallpaper('main', blob);
+          config.bgImage = 'indexeddb:wallpaper';
+          await saveConfig();
+          console.log("[Tabula] Migration successful.");
+        } catch (e) {
+          console.error("[Tabula] Migration failed:", e);
+        }
+      }
+
+      // 额外检查：如果已经是数据库模式但缺少缩略图（针对迁移）
+      if (config.bgImage === 'indexeddb:wallpaper' && !localStorage.getItem('tabula_bgThumb')) {
+        console.log("[Tabula] Missing thumbnail for existing wallpaper, generating...");
+        const blob = await getWallpaperBlob();
+        if (blob) {
+          const img = new Image();
+          img.onload = () => {
+            const thumbData = generateThumbnail(img);
+            localStorage.setItem('tabula_bgThumb', thumbData);
+            // 不再自动修改颜色样本，尊重用户的 bgColor 配置
+          };
+          img.src = URL.createObjectURL(blob);
+        }
+      }
+    }
+  }
+
   async function loadConfig() {
     return new Promise((resolve) => {
-      chrome.storage.local.get([STORAGE_KEY], async (res) => {
-        if (res[STORAGE_KEY]) {
-          config = {
-            ...DEFAULT_CONFIG,
-            ...res[STORAGE_KEY],
-            wheelSlots: {
-              ...DEFAULT_CONFIG.wheelSlots,
-              ...(res[STORAGE_KEY].wheelSlots || {})
-            }
-          };
-          
-          // ==== 自动迁移逻辑：Base64 -> IndexedDB & 生成缩略图 ====
-          if (config.bgImage && config.bgImage.startsWith('data:image')) {
-            console.log("[Tabula] Migrating legacy Base64 wallpaper to IndexedDB...");
-            try {
-              const response = await fetch(config.bgImage);
-              const blob = await response.blob();
-              await TabulaIDB.setWallpaper('main', blob);
-              config.bgImage = 'indexeddb:wallpaper';
-              await saveConfig();
-              console.log("[Tabula] Migration successful.");
-            } catch (e) {
-              console.error("[Tabula] Migration failed:", e);
-            }
-          }
-
-          // 额外检查：如果已经是数据库模式但缺少缩略图（针对迁移）
-          if (config.bgImage === 'indexeddb:wallpaper' && !localStorage.getItem('tabula_bgThumb')) {
-            console.log("[Tabula] Missing thumbnail for existing wallpaper, generating...");
-            const blob = await getWallpaperBlob();
-            if (blob) {
-              const img = new Image();
-              img.onload = () => {
-                const thumbData = generateThumbnail(img);
-                localStorage.setItem('tabula_bgThumb', thumbData);
-                // 不再自动修改颜色样本，尊重用户的 bgColor 配置
-              };
-              img.src = URL.createObjectURL(blob);
-            }
-          }
+      if (isExtensionEnv) {
+        chrome.storage.local.get([STORAGE_KEY], async (res) => {
+          await processLoadedConfig(res[STORAGE_KEY]);
+          resolve(config);
+        });
+      } else {
+        try {
+          const data = localStorage.getItem(STORAGE_KEY);
+          const parsed = data ? JSON.parse(data) : null;
+          processLoadedConfig(parsed).then(() => resolve(config));
+        } catch (e) {
+          resolve(config);
         }
-        resolve(config);
-      });
+      }
     });
   }
 
   async function saveConfig() {
     return new Promise((resolve) => {
-      chrome.storage.local.set({ [STORAGE_KEY]: config }, () => {
-        // 同步存入 localStorage（作为首帧防闪烁的底层缓存）
+      const syncLocalStorage = () => {
         try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
           if (config.bgImage) {
             // 如果是数据库存储，存入一个标记位，让 preload.js 知道有图
             const val = config.bgImage === 'indexeddb:wallpaper' ? 'indexeddb' : config.bgImage;
@@ -119,7 +135,13 @@ const TabulaSettings = (function () {
           console.warn("[Tabula] localStorage quota exceeded, check storage usage.", e);
         }
         resolve();
-      });
+      };
+
+      if (isExtensionEnv) {
+        chrome.storage.local.set({ [STORAGE_KEY]: config }, syncLocalStorage);
+      } else {
+        syncLocalStorage();
+      }
     });
   }
 
