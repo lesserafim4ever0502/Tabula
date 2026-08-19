@@ -108,8 +108,9 @@ const TabulaWheel = (function () {
     }
     return {
       wheelEnabled: true,
+      wheelTriggerMode: 'both',
       wheelTriggerDelay: 320,
-      wheelOpenNewTab: false,
+      wheelOpenNewTab: true,
       wheelSlots: {
         n:  { mode: 'auto', bookmarkId: null },
         ne: { mode: 'auto', bookmarkId: null },
@@ -550,9 +551,15 @@ const TabulaWheel = (function () {
       await window.TabulaStorage.incrementFrequency(bookmark.id);
     }
 
-    // 执行跳转
-    if (config.wheelOpenNewTab) {
-      window.open(bookmark.url, '_blank');
+    // 执行跳转：新建标签页打开，保留当前起始页
+    const openInNewTab = config.wheelOpenNewTab !== false;
+
+    if (openInNewTab) {
+      if (typeof chrome !== 'undefined' && chrome.tabs && chrome.tabs.create) {
+        chrome.tabs.create({ url: bookmark.url });
+      } else {
+        window.open(bookmark.url, '_blank');
+      }
       hideWheel();
     } else {
       hideWheel();

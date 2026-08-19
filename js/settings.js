@@ -21,7 +21,7 @@ const TabulaSettings = (function () {
     wheelEnabled: true,
     wheelTriggerMode: 'both', // 'both' (中键+长按) | 'middle' (仅中键) | 'left_long' (仅左键长按)
     wheelTriggerDelay: 320,
-    wheelOpenNewTab: false,
+    wheelOpenNewTab: true,
     wheelSlots: {
       n:  { mode: 'auto', bookmarkId: null },
       ne: { mode: 'auto', bookmarkId: null },
