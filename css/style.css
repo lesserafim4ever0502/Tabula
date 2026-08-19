@@ -1097,16 +1097,24 @@ body.is-navigating #bookmark-dropdown-container {
   background: rgba(255, 255, 255, 0.32);
 }
 
-/* Tab 面板切换 */
+/* Tab 面板切换：默认全部保持原本精致的垂直居中分布，仅长页面 tab-wheel 采用顶起排列 */
 .tab-pane {
   display: none;
   opacity: 0;
+  min-height: 100%;
+  flex-direction: column;
+  justify-content: center;
+  box-sizing: border-box;
 }
 
 .tab-pane.active {
-  display: block;
+  display: flex;
   opacity: 1;
   animation: fadeInTab 0.15s ease forwards;
+}
+
+#tab-wheel {
+  justify-content: flex-start;
 }
 
 @keyframes fadeInTab {
