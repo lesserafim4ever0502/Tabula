@@ -964,7 +964,7 @@ const TabulaSettings = (function () {
       }
 
       if (bookmarks.length === 0) {
-        listContainer.innerHTML = '<div class="picker-empty-tip">未找到匹配的书签</div>';
+        listContainer.innerHTML = '<div class="picker-empty-tip">未找到匹配的书签（请在侧栏添加书签）</div>';
         return;
       }
 
@@ -981,12 +981,25 @@ const TabulaSettings = (function () {
 
     await renderList();
     pickerModal.style.display = 'flex';
-    if (searchInput) searchInput.focus();
+    requestAnimationFrame(() => {
+      pickerModal.classList.add('active');
+      if (searchInput) searchInput.focus();
+    });
+  }
+
+  function closeBookmarkPicker() {
+    const pickerModal = document.getElementById('wheel-picker-modal');
+    if (pickerModal) {
+      pickerModal.classList.remove('active');
+      setTimeout(() => {
+        pickerModal.style.display = 'none';
+      }, 150);
+    }
+    currentPickingDirection = null;
   }
 
   function bindWheelTabEvents() {
     const enableToggle = document.getElementById('wheel-enabled-toggle');
-    const newtabToggle = document.getElementById('wheel-newtab-toggle');
     const slotsContainer = document.getElementById('wheel-slots-list');
     const btnRefresh = document.getElementById('btn-refresh-wheel-slots');
 
@@ -1090,12 +1103,25 @@ const TabulaSettings = (function () {
       });
     }
 
-    if (pickerClose && pickerModal) {
+    if (pickerClose) {
       pickerClose.addEventListener('click', () => {
-        pickerModal.style.display = 'none';
-        currentPickingDirection = null;
+        closeBookmarkPicker();
       });
     }
+
+    if (pickerModal) {
+      pickerModal.addEventListener('click', (e) => {
+        if (e.target === pickerModal) {
+          closeBookmarkPicker();
+        }
+      });
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && pickerModal && pickerModal.classList.contains('active')) {
+        closeBookmarkPicker();
+      }
+    });
 
     if (pickerSearch && pickerList) {
       pickerSearch.addEventListener('input', async (e) => {
@@ -1135,8 +1161,7 @@ const TabulaSettings = (function () {
           const slots = { ...(config.wheelSlots || {}) };
           slots[currentPickingDirection] = { mode: 'custom', bookmarkId: bmId };
           await updateConfig({ wheelSlots: slots });
-          if (pickerModal) pickerModal.style.display = 'none';
-          currentPickingDirection = null;
+          closeBookmarkPicker();
           await renderWheelTabUI();
         }
       });

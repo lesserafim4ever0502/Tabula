@@ -2229,7 +2229,15 @@ body.is-navigating #bookmark-dropdown-container {
 
 /* Bookmark Picker Popover Modal */
 .wheel-picker-overlay {
-  z-index: 2100;
+  z-index: 2200 !important; /* Higher than #settings-modal (2000) */
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.wheel-picker-overlay.active {
+  opacity: 1 !important;
+  pointer-events: auto !important;
 }
 
 .wheel-picker-card {
@@ -2240,10 +2248,16 @@ body.is-navigating #bookmark-dropdown-container {
   max-height: 520px;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
-  padding: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+  padding: 18px;
   box-sizing: border-box;
   gap: 12px;
+  transform: scale(0.95);
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.wheel-picker-overlay.active .wheel-picker-card {
+  transform: scale(1);
 }
 
 .wheel-picker-header {
