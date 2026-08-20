@@ -1997,25 +1997,53 @@ body.is-navigating #bookmark-dropdown-container {
   box-sizing: border-box;
 }
 
+/* Settings Wheel Tab Slot Editor - Single Column (1 per row) */
+.badge-trigger-method {
+  font-size: 12px;
+  color: var(--color-text-secondary, rgba(255, 255, 255, 0.75));
+  font-weight: 500;
+  padding: 4px 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.wheel-slots-section {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
 .wheel-slots-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  margin-bottom: 2px;
+  margin-bottom: 6px;
 }
 
 .wheel-slots-header label {
   font-size: 13px;
   font-weight: 600;
-  color: var(--text-color, #f0f0f5);
+  color: var(--color-text-primary, #f0f0f5);
   white-space: nowrap;
 }
 
-.wheel-slots-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+.wheel-slots-header .btn-inline {
+  min-width: unset !important;
+  padding: 0 10px !important;
+  height: 26px !important;
+  font-size: 11px !important;
+}
+
+.wheel-slots-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   width: 100%;
   box-sizing: border-box;
 }
@@ -2024,10 +2052,11 @@ body.is-navigating #bookmark-dropdown-container {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 8px;
-  padding: 6px 10px;
+  padding: 8px 12px;
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   min-width: 0;
   box-sizing: border-box;
   transition: border-color 0.15s ease, background 0.15s ease;
@@ -2038,34 +2067,34 @@ body.is-navigating #bookmark-dropdown-container {
   background: rgba(255, 255, 255, 0.05);
 }
 
-.slot-card-header {
+.slot-card-left {
   display: flex;
   align-items: center;
-  gap: 6px;
-  min-width: 0;
+  gap: 8px;
+  min-width: 124px;
+  flex-shrink: 0;
 }
 
 .slot-card-arrow {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   color: #5865f2;
   font-family: monospace;
+  width: 14px;
+  text-align: center;
 }
 
 .slot-card-label {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--text-color, #e0e0e8);
-  flex: 1;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .slot-badge {
   font-size: 8px;
-  padding: 1px 5px;
-  border-radius: 8px;
+  padding: 2px 6px;
+  border-radius: 6px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.3px;
@@ -2096,33 +2125,34 @@ body.is-navigating #bookmark-dropdown-container {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.slot-card-body {
+.slot-card-center {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  flex: 1;
   min-width: 0;
 }
 
 .slot-card-icon {
-  font-size: 14px;
+  font-size: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   flex-shrink: 0;
 }
 
 .slot-card-icon .bm-icon-img {
-  width: 16px;
-  height: 16px;
-  border-radius: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
   object-fit: cover;
 }
 
 .slot-card-title {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.85);
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.88);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2133,16 +2163,17 @@ body.is-navigating #bookmark-dropdown-container {
 .slot-card-actions {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   flex-shrink: 0;
 }
 
 .slot-action-btn {
-  height: 22px !important;
-  padding: 0 7px !important;
-  font-size: 10px !important;
+  height: 24px !important;
+  min-width: 44px !important;
+  padding: 0 8px !important;
+  font-size: 11px !important;
   font-weight: 500;
-  border-radius: 4px;
+  border-radius: 5px;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.12);
   color: rgba(255, 255, 255, 0.85);

@@ -189,7 +189,9 @@
                 </div>
                 <div class="bg-item">
                   <span>Trigger Method:</span>
-                  <span style="font-size: 13px; color: var(--color-text-primary, #f0f0f5); font-weight: 500;">鼠标中键按住滑动 (Middle Click & Hold)</span>
+                  <div class="action-group-inline">
+                    <span class="badge-trigger-method">鼠标中键按住滑动 (Middle Click & Hold)</span>
+                  </div>
                 </div>
                 <div class="bg-item" title="是否在新标签页中打开书签">
                   <span>Open in New Tab:</span>
@@ -206,18 +208,18 @@
               <div class="bg-setting-list">
                 <div class="bg-item">
                   <span>Background Color:</span>
-                  <div style="display: flex; align-items: center; gap: 8px;">
+                  <div class="action-group-inline">
                     <input type="color" id="wheel-bgcolor-input" value="#12141a" class="color-picker-input">
                     <button type="button" id="wheel-bgcolor-reset" class="action-btn btn-inline" style="padding: 4px 10px; font-size: 11px;">Default</button>
                   </div>
                 </div>
                 <div class="bg-item">
                   <span>Background Image:</span>
-                  <div style="display: flex; align-items: center; gap: 8px;">
+                  <div class="action-group-inline">
                     <input type="file" id="wheel-bgimage-file" accept="image/*" style="display: none;">
+                    <span id="wheel-bgimage-name" style="font-size: 11px; color: var(--color-text-muted, rgba(255,255,255,0.5)); max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></span>
                     <button type="button" id="wheel-bgimage-btn" class="action-btn btn-inline" style="padding: 4px 12px; font-size: 12px;">Upload Image</button>
                     <button type="button" id="wheel-bgimage-clear" class="action-btn btn-inline" style="padding: 4px 10px; font-size: 11px; display: none;">Clear</button>
-                    <span id="wheel-bgimage-name" style="font-size: 11px; color: var(--color-text-muted, rgba(255,255,255,0.5)); max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></span>
                   </div>
                 </div>
               </div>
@@ -230,7 +232,7 @@
                     <span class="t-icon i-health"></span> Refresh Suggestions
                   </button>
                 </div>
-                <div id="wheel-slots-list" class="wheel-slots-grid"></div>
+                <div id="wheel-slots-list" class="wheel-slots-list"></div>
               </div>
             </div>
           </div>

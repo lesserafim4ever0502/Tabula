@@ -911,19 +911,19 @@ const TabulaSettings = (function () {
 
       html += `
         <div class="wheel-slot-card" data-dir="${dir.key}">
-          <div class="slot-card-header">
+          <div class="slot-card-left">
             <span class="slot-card-arrow">${dir.arrow}</span>
             <span class="slot-card-label">${dir.label}</span>
             ${badgeHtml}
           </div>
-          <div class="slot-card-body">
+          <div class="slot-card-center">
             <div class="slot-card-icon">${iconHtml}</div>
             <div class="slot-card-title" title="${escapeHTML(titleText)}">${escapeHTML(titleText)}</div>
-            <div class="slot-card-actions">
-              <button type="button" class="slot-action-btn btn-pick btn-pick-bm" data-dir="${dir.key}" title="选择书签固定">Pick</button>
-              <button type="button" class="slot-action-btn btn-auto-bm" data-dir="${dir.key}" title="恢复为自动推荐">Auto</button>
-              <button type="button" class="slot-action-btn btn-clear-bm" data-dir="${dir.key}" title="清空槽位">Clear</button>
-            </div>
+          </div>
+          <div class="slot-card-actions">
+            <button type="button" class="slot-action-btn btn-pick btn-pick-bm" data-dir="${dir.key}" title="选择书签固定">Pick</button>
+            <button type="button" class="slot-action-btn btn-auto-bm" data-dir="${dir.key}" title="恢复为自动推荐">Auto</button>
+            <button type="button" class="slot-action-btn btn-clear-bm" data-dir="${dir.key}" title="清空槽位">Clear</button>
           </div>
         </div>
       `;
