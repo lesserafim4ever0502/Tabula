@@ -195,10 +195,32 @@
                 </div>
               </div>
 
-              <!-- 轮盘外观与主题自定义 -->
+              <!-- 轮盘外观与高阶自定义 -->
               <div class="settings-divider"></div>
-              <label style="font-size: 13px; font-weight: 600; color: var(--color-text-primary, #f0f0f5); margin-bottom: 8px; display: block;">Wheel Appearance (轮盘主题外观)</label>
+              <label style="font-size: 13px; font-weight: 600; color: var(--color-text-primary, #f0f0f5); margin-bottom: 8px; display: block;">Wheel Appearance & Customization (轮盘外观与自定义)</label>
               <div class="bg-setting-list">
+                <div class="bg-item" title="是否在轮盘中显示书签标题文本（关闭后图标自动放大）">
+                  <span>Show Titles (显示标题文本):</span>
+                  <label class="switch-control">
+                    <input type="checkbox" id="wheel-show-title-toggle">
+                    <span class="switch-slider"></span>
+                  </label>
+                </div>
+                <div class="bg-item" title="是否在轮盘中显示书签网址域名">
+                  <span>Show URLs (显示网址域名):</span>
+                  <label class="switch-control">
+                    <input type="checkbox" id="wheel-show-url-toggle">
+                    <span class="switch-slider"></span>
+                  </label>
+                </div>
+                <div class="bg-item" title="调节轮盘背景圆盘的不透明度">
+                  <span>Disc Opacity (轮盘背景透明度):</span>
+                  <input type="range" id="wheel-bg-opacity-slider" min="0.1" max="1.0" step="0.05" value="0.9" class="setting-slider">
+                </div>
+                <div class="bg-item" title="调节轮盘内图标的不透明度">
+                  <span>Icon Opacity (图标不透明度):</span>
+                  <input type="range" id="wheel-icon-opacity-slider" min="0.1" max="1.0" step="0.05" value="1.0" class="setting-slider">
+                </div>
                 <div class="bg-item">
                   <span>Background Color:</span>
                   <div class="action-group-inline">

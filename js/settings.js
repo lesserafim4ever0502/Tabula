@@ -22,6 +22,10 @@ const TabulaSettings = (function () {
     wheelOpenNewTab: true,
     wheelBgColor: '#12141a',
     wheelBgImage: '',
+    wheelBgOpacity: 0.9,
+    wheelIconOpacity: 1.0,
+    wheelShowTitle: true,
+    wheelShowUrl: false,
     wheelSlots: {
       n:  { mode: 'auto', bookmarkId: null },
       ne: { mode: 'auto', bookmarkId: null },
@@ -849,12 +853,20 @@ const TabulaSettings = (function () {
    */
   async function renderWheelTabUI() {
     const enableToggle = document.getElementById('wheel-enabled-toggle');
+    const showTitleToggle = document.getElementById('wheel-show-title-toggle');
+    const showUrlToggle = document.getElementById('wheel-show-url-toggle');
+    const bgOpacitySlider = document.getElementById('wheel-bg-opacity-slider');
+    const iconOpacitySlider = document.getElementById('wheel-icon-opacity-slider');
     const slotsContainer = document.getElementById('wheel-slots-list');
     const bgColorInput = document.getElementById('wheel-bgcolor-input');
 
     if (!enableToggle || !slotsContainer) return;
 
     enableToggle.checked = config.wheelEnabled !== false;
+    if (showTitleToggle) showTitleToggle.checked = config.wheelShowTitle !== false;
+    if (showUrlToggle) showUrlToggle.checked = config.wheelShowUrl === true;
+    if (bgOpacitySlider) bgOpacitySlider.value = typeof config.wheelBgOpacity === 'number' ? config.wheelBgOpacity : 0.9;
+    if (iconOpacitySlider) iconOpacitySlider.value = typeof config.wheelIconOpacity === 'number' ? config.wheelIconOpacity : 1.0;
     if (bgColorInput) bgColorInput.value = config.wheelBgColor || '#12141a';
 
     let allBookmarks = [];
@@ -1003,6 +1015,11 @@ const TabulaSettings = (function () {
     const slotsContainer = document.getElementById('wheel-slots-list');
     const btnRefresh = document.getElementById('btn-refresh-wheel-slots');
 
+    const showTitleToggle = document.getElementById('wheel-show-title-toggle');
+    const showUrlToggle = document.getElementById('wheel-show-url-toggle');
+    const bgOpacitySlider = document.getElementById('wheel-bg-opacity-slider');
+    const iconOpacitySlider = document.getElementById('wheel-icon-opacity-slider');
+
     const bgColorInput = document.getElementById('wheel-bgcolor-input');
     const bgColorReset = document.getElementById('wheel-bgcolor-reset');
     const bgImageBtn = document.getElementById('wheel-bgimage-btn');
@@ -1017,6 +1034,30 @@ const TabulaSettings = (function () {
     if (enableToggle) {
       enableToggle.addEventListener('change', async (e) => {
         await updateConfig({ wheelEnabled: e.target.checked });
+      });
+    }
+
+    if (showTitleToggle) {
+      showTitleToggle.addEventListener('change', async (e) => {
+        await updateConfig({ wheelShowTitle: e.target.checked });
+      });
+    }
+
+    if (showUrlToggle) {
+      showUrlToggle.addEventListener('change', async (e) => {
+        await updateConfig({ wheelShowUrl: e.target.checked });
+      });
+    }
+
+    if (bgOpacitySlider) {
+      bgOpacitySlider.addEventListener('input', async (e) => {
+        await updateConfig({ wheelBgOpacity: parseFloat(e.target.value) });
+      });
+    }
+
+    if (iconOpacitySlider) {
+      iconOpacitySlider.addEventListener('input', async (e) => {
+        await updateConfig({ wheelIconOpacity: parseFloat(e.target.value) });
       });
     }
 

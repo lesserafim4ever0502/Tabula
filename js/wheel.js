@@ -231,15 +231,54 @@ const TabulaWheel = (function () {
   }
 
   /**
-   * 应用轮盘主题自定义 (背景颜色 / 背景图片)
+   * 十六进制颜色与透明度转 RGBA
+   */
+  function hexToRgba(hex, alpha = 1.0) {
+    if (!hex) return `rgba(18, 20, 26, ${alpha})`;
+    if (hex.startsWith('rgba') || hex.startsWith('rgb')) {
+      return hex;
+    }
+    let c = hex.replace('#', '');
+    if (c.length === 3) {
+      c = c.split('').map(x => x + x).join('');
+    }
+    const num = parseInt(c, 16);
+    if (isNaN(num)) return `rgba(18, 20, 26, ${alpha})`;
+    const r = (num >> 16) & 255;
+    const g = (num >> 8) & 255;
+    const b = num & 255;
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+
+  /**
+   * 提取网址的简短主域名
+   */
+  function extractDomain(url) {
+    try {
+      const u = new URL(url);
+      return u.hostname.replace(/^www\./, '');
+    } catch (e) {
+      return url || '';
+    }
+  }
+
+  /**
+   * 应用轮盘主题自定义 (背景颜色 / 背景图片 / 不透明度 / 文本隐藏 / 网址展示)
    */
   function applyWheelTheme() {
     if (!discEl) return;
     const config = getConfig();
     const bgColor = config.wheelBgColor || '#12141a';
     const bgImage = config.wheelBgImage || '';
+    const bgOpacity = typeof config.wheelBgOpacity === 'number' ? config.wheelBgOpacity : 0.9;
+    const iconOpacity = typeof config.wheelIconOpacity === 'number' ? config.wheelIconOpacity : 1.0;
+    const showTitle = config.wheelShowTitle !== false;
+    const showUrl = config.wheelShowUrl === true;
 
-    discEl.style.backgroundColor = bgColor;
+    // 设置 CSS 变量与动态 RGBA 背景色
+    discEl.style.setProperty('--wheel-icon-opacity', iconOpacity);
+    discEl.style.backgroundColor = hexToRgba(bgColor, bgOpacity);
+
     if (bgImage) {
       discEl.style.backgroundImage = `url("${bgImage}")`;
       discEl.style.backgroundSize = 'cover';
@@ -247,6 +286,18 @@ const TabulaWheel = (function () {
       discEl.style.backgroundRepeat = 'no-repeat';
     } else {
       discEl.style.backgroundImage = 'none';
+    }
+
+    if (!showTitle) {
+      discEl.classList.add('hide-title');
+    } else {
+      discEl.classList.remove('hide-title');
+    }
+
+    if (showUrl) {
+      discEl.classList.add('show-url');
+    } else {
+      discEl.classList.remove('show-url');
     }
   }
 
@@ -309,6 +360,7 @@ const TabulaWheel = (function () {
       slotNode.innerHTML = `
         <div class="slot-icon-wrap"></div>
         <div class="slot-title-wrap"></div>
+        <div class="slot-url-wrap"></div>
       `;
 
       slotsContainer.appendChild(slotNode);
@@ -346,20 +398,37 @@ const TabulaWheel = (function () {
    */
   function updateSlotsContent() {
     if (!resolvedSlots || resolvedSlots.length === 0) return;
+    const config = getConfig();
+    const showTitle = config.wheelShowTitle !== false;
+    const showUrl = config.wheelShowUrl === true;
 
     resolvedSlots.forEach((item, index) => {
       const slotNode = slotNodes[index];
       if (!slotNode) return;
       const iconWrap = slotNode.querySelector('.slot-icon-wrap');
       const titleWrap = slotNode.querySelector('.slot-title-wrap');
+      const urlWrap = slotNode.querySelector('.slot-url-wrap');
 
       if (item.bookmark) {
         iconWrap.innerHTML = getIconHTML(item.bookmark.icon);
-        titleWrap.textContent = item.bookmark.title || item.bookmark.url;
+        if (titleWrap) {
+          titleWrap.textContent = item.bookmark.title || item.bookmark.url;
+          titleWrap.style.display = showTitle ? 'block' : 'none';
+        }
+        if (urlWrap) {
+          urlWrap.textContent = extractDomain(item.bookmark.url);
+          urlWrap.style.display = showUrl ? 'block' : 'none';
+        }
         slotNode.classList.remove('is-empty', 'is-missing');
       } else {
         iconWrap.innerHTML = '<span class="t-icon i-plus"></span>';
-        titleWrap.textContent = item.mode === 'custom' ? 'Missing' : 'Empty';
+        if (titleWrap) {
+          titleWrap.textContent = item.mode === 'custom' ? 'Missing' : 'Empty';
+          titleWrap.style.display = showTitle ? 'block' : 'none';
+        }
+        if (urlWrap) {
+          urlWrap.style.display = 'none';
+        }
         slotNode.classList.add(item.mode === 'custom' ? 'is-missing' : 'is-empty');
       }
     });

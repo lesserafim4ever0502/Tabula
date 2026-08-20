@@ -1769,6 +1769,8 @@ body.is-navigating #bookmark-dropdown-container {
   position: absolute;
   inset: 0;
   pointer-events: none;
+  opacity: var(--wheel-icon-opacity, 1);
+  transition: opacity 0.15s ease;
 }
 
 .wheel-slot-node {
@@ -1778,8 +1780,8 @@ body.is-navigating #bookmark-dropdown-container {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 68px;
-  height: 60px;
+  width: 72px;
+  height: 64px;
   text-align: center;
   pointer-events: none;
   transition: transform 0.1s cubic-bezier(0.16, 1, 0.3, 1), color 0.1s ease;
@@ -1797,6 +1799,7 @@ body.is-navigating #bookmark-dropdown-container {
   justify-content: center;
   margin-bottom: 3px;
   color: rgba(255, 255, 255, 0.92);
+  transition: transform 0.15s ease, font-size 0.15s ease;
 }
 
 .slot-icon-wrap .bm-icon-img {
@@ -1804,6 +1807,24 @@ body.is-navigating #bookmark-dropdown-container {
   height: 22px;
   border-radius: 4px;
   object-fit: cover;
+  transition: width 0.15s ease, height 0.15s ease;
+}
+
+/* 隐藏文本模式下，图标自动放大一点点 */
+.wheel-menu-disc.hide-title .slot-icon-wrap {
+  font-size: 28px;
+  margin-bottom: 0;
+  transform: scale(1.22);
+}
+
+.wheel-menu-disc.hide-title .slot-icon-wrap .bm-icon-img {
+  width: 28px;
+  height: 28px;
+  border-radius: 5px;
+}
+
+.wheel-menu-disc.hide-title .slot-title-wrap {
+  display: none !important;
 }
 
 .slot-title-wrap {
@@ -1821,6 +1842,21 @@ body.is-navigating #bookmark-dropdown-container {
   color: #fff;
   font-weight: 600;
   text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+}
+
+.slot-url-wrap {
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.45);
+  max-width: 68px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.1;
+  margin-top: 1px;
+}
+
+.wheel-slot-node.active .slot-url-wrap {
+  color: rgba(255, 255, 255, 0.75);
 }
 
 .slot-dir-badge {
