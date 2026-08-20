@@ -849,27 +849,13 @@ const TabulaSettings = (function () {
    */
   async function renderWheelTabUI() {
     const enableToggle = document.getElementById('wheel-enabled-toggle');
-    const newtabToggle = document.getElementById('wheel-newtab-toggle');
     const slotsContainer = document.getElementById('wheel-slots-list');
     const bgColorInput = document.getElementById('wheel-bgcolor-input');
-    const bgImageName = document.getElementById('wheel-bgimage-name');
-    const bgImageClear = document.getElementById('wheel-bgimage-clear');
 
     if (!enableToggle || !slotsContainer) return;
 
     enableToggle.checked = config.wheelEnabled !== false;
-    if (newtabToggle) newtabToggle.checked = config.wheelOpenNewTab !== false;
     if (bgColorInput) bgColorInput.value = config.wheelBgColor || '#12141a';
-
-    if (bgImageName && bgImageClear) {
-      if (config.wheelBgImage) {
-        bgImageName.textContent = 'Custom Image Set';
-        bgImageClear.style.display = 'inline-block';
-      } else {
-        bgImageName.textContent = '';
-        bgImageClear.style.display = 'none';
-      }
-    }
 
     let allBookmarks = [];
     if (typeof window.TabulaStorage !== 'undefined') {
@@ -1018,12 +1004,6 @@ const TabulaSettings = (function () {
     if (enableToggle) {
       enableToggle.addEventListener('change', async (e) => {
         await updateConfig({ wheelEnabled: e.target.checked });
-      });
-    }
-
-    if (newtabToggle) {
-      newtabToggle.addEventListener('change', async (e) => {
-        await updateConfig({ wheelOpenNewTab: e.target.checked });
       });
     }
 

@@ -574,21 +574,13 @@ const TabulaWheel = (function () {
       await window.TabulaStorage.incrementFrequency(bookmark.id);
     }
 
-    // 执行跳转：新建标签页打开，保留当前起始页
-    const openInNewTab = config.wheelOpenNewTab !== false;
-
-    if (openInNewTab) {
-      if (typeof chrome !== 'undefined' && chrome.tabs && chrome.tabs.create) {
-        chrome.tabs.create({ url: bookmark.url });
-      } else {
-        window.open(bookmark.url, '_blank');
-      }
-      hideWheel();
+    // 执行跳转：统一在新标签页中打开，坚决保留当前起始页
+    if (typeof chrome !== 'undefined' && chrome.tabs && chrome.tabs.create) {
+      chrome.tabs.create({ url: bookmark.url });
     } else {
-      hideWheel();
-      document.body.classList.add('is-navigating');
-      window.location.href = bookmark.url;
+      window.open(bookmark.url, '_blank');
     }
+    hideWheel();
   }
 
   /**
