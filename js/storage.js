@@ -104,11 +104,50 @@ const TabulaStorage = (function () {
      * 初始化：检查运行环境合法性
      */
     async init() {
-      const data = await core.get();
-      if (!data) {
-        await core.set([]);
+      let data = await core.get();
+      const presetData = (typeof window !== 'undefined' && window.TABULA_PRESET_DATA) ? window.TABULA_PRESET_DATA : null;
+
+      // 1. 全新安装：无数据时载入预设全量书签
+      if (!data || data.length === 0) {
+        const initialBookmarks = (presetData && Array.isArray(presetData.bookmarks)) ? presetData.bookmarks : [];
+        await core.set(initialBookmarks.map(normalizeBookmark));
         return;
       }
+
+      // 2. 已有数据：自动升级旧图标为高清 48x48 PNG，并同步更新更名书签（如 NotebookLM -> Gemini Notebook），同时 100% 保留本地 frequency / lastUsedAt
+      if (presetData && Array.isArray(presetData.bookmarks)) {
+        const presetMap = new Map();
+        presetData.bookmarks.forEach(bm => {
+          if (bm.url) presetMap.set(bm.url.trim().toLowerCase(), bm);
+          if (bm.id) presetMap.set(bm.id, bm);
+        });
+
+        let hasUpgrade = false;
+        data = data.map(bm => {
+          const urlKey = (bm.url || '').trim().toLowerCase();
+          const presetBm = presetMap.get(urlKey) || presetMap.get(bm.id);
+          if (presetBm) {
+            // 升级为高清/矢量新图标
+            if (presetBm.icon && (presetBm.icon.startsWith('data:image/png') || presetBm.icon.startsWith('data:image/svg')) && bm.icon !== presetBm.icon) {
+              bm.icon = presetBm.icon;
+              hasUpgrade = true;
+            }
+            // 自动同步书签更名（例如 NotebookLM -> Gemini Notebook）
+            if (presetBm.title && presetBm.title !== bm.title && (bm.title === 'NotebookLM' || bm.title === 'Notebook')) {
+              bm.title = presetBm.title;
+              hasUpgrade = true;
+            }
+          }
+          return normalizeBookmark(bm);
+        });
+
+        if (hasUpgrade) {
+          console.log("[TabulaStorage] Upgraded bookmark icons & titles to latest HD presets.");
+          await core.set(data);
+          return;
+        }
+      }
+
       const normalized = data.map(normalizeBookmark);
       const needsMigration = JSON.stringify(data) !== JSON.stringify(normalized);
       if (needsMigration) {

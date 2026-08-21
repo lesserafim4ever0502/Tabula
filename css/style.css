@@ -1733,12 +1733,25 @@ body.is-navigating #bookmark-dropdown-container {
   height: 330px;
   transform: translate(-50%, -50%);
   border-radius: 50%;
-  background: rgba(18, 20, 26, 0.88);
-  backdrop-filter: blur(28px);
-  -webkit-backdrop-filter: blur(28px);
+  background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.16);
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.08) inset;
   pointer-events: auto;
+  overflow: hidden;
+}
+
+.wheel-disc-bg {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  pointer-events: none;
+  z-index: 0;
+  transition: opacity 0.08s ease, background-color 0.1s ease;
 }
 
 .wheel-svg {
@@ -1747,6 +1760,7 @@ body.is-navigating #bookmark-dropdown-container {
   width: 100%;
   height: 100%;
   overflow: visible;
+  z-index: 1;
 }
 
 .wheel-sector-path {
@@ -1763,6 +1777,21 @@ body.is-navigating #bookmark-dropdown-container {
   stroke: rgba(147, 160, 255, 0.9);
   stroke-width: 1.5;
   filter: drop-shadow(0 0 8px rgba(88, 101, 242, 0.55));
+}
+
+/* 多选模式扇区高亮状态 (翡翠绿清透毛玻璃高亮，无需杂乱对勾) */
+.wheel-sector-path.multi-selected {
+  fill: rgba(76, 175, 80, 0.45) !important;
+  stroke: rgba(129, 230, 135, 0.95) !important;
+  stroke-width: 2.2 !important;
+  filter: drop-shadow(0 0 12px rgba(76, 175, 80, 0.75)) !important;
+}
+
+.wheel-sector-path.multi-selected.active {
+  fill: rgba(102, 215, 110, 0.62) !important;
+  stroke: #ffffff !important;
+  stroke-width: 2.5 !important;
+  filter: drop-shadow(0 0 16px rgba(76, 215, 80, 0.95)) !important;
 }
 
 .wheel-slots-container {
@@ -1789,6 +1818,11 @@ body.is-navigating #bookmark-dropdown-container {
 
 .wheel-slot-node.active {
   transform: translate(-50%, -50%) scale(1.15);
+}
+
+.wheel-slot-node.multi-selected {
+  transform: translate(-50%, -50%) scale(1.14);
+  filter: drop-shadow(0 0 8px rgba(76, 175, 80, 0.8));
 }
 
 .slot-icon-wrap {
@@ -1904,6 +1938,28 @@ body.is-navigating #bookmark-dropdown-container {
 .wheel-center-hub.has-selection {
   border-color: rgba(88, 101, 242, 0.65);
   background: rgba(18, 22, 34, 0.96);
+}
+
+.wheel-center-hub.multi-mode {
+  border-color: rgba(76, 175, 80, 0.9) !important;
+  background: rgba(14, 28, 18, 0.96) !important;
+  box-shadow: 0 0 24px rgba(76, 175, 80, 0.45) !important;
+}
+
+.multi-count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 5px;
+  background: linear-gradient(135deg, #4caf50, #2e7d32);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 800;
+  border-radius: 11px;
+  box-shadow: 0 2px 6px rgba(76, 175, 80, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.7);
 }
 
 .center-hub-content {

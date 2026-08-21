@@ -13,6 +13,10 @@ docs/
 
 # --- 开发环境与辅助工具 (Dev Environment) ---
 scripts/
+tests/
+test_*.js
+test-results/
+test_results/
 .vscode/
 .idea/
 node_modules/

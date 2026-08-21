@@ -5,38 +5,40 @@
 
 const TabulaSettings = (function () {
   const STORAGE_KEY = 'tabula_config';
-  const DEFAULT_CONFIG = {
-    engine: 'google',
-    bgColor: '#0f0f11',
-    bgImage: null, 
-    customUrl: '',
-    searchWidth: 560,
-    searchOpacity: 0.1,
-    searchBackdropBlur: 20,
-    wpBlur: 0,
-    wpBrightness: 1.0,
-    searchLeft: 50,
-    searchTop: 45,
-    // Radial Wheel 轮盘配置
-    wheelEnabled: true,
-    wheelOpenNewTab: true,
-    wheelBgColor: '#12141a',
-    wheelBgImage: '',
-    wheelBgOpacity: 0.9,
-    wheelIconOpacity: 1.0,
-    wheelShowTitle: true,
-    wheelShowUrl: false,
-    wheelSlots: {
-      n:  { mode: 'auto', bookmarkId: null },
-      ne: { mode: 'auto', bookmarkId: null },
-      e:  { mode: 'auto', bookmarkId: null },
-      se: { mode: 'auto', bookmarkId: null },
-      s:  { mode: 'auto', bookmarkId: null },
-      sw: { mode: 'auto', bookmarkId: null },
-      w:  { mode: 'auto', bookmarkId: null },
-      nw: { mode: 'auto', bookmarkId: null }
-    }
-  };
+  const DEFAULT_CONFIG = (typeof window !== 'undefined' && window.TABULA_PRESET_DATA && window.TABULA_PRESET_DATA.config)
+    ? { ...window.TABULA_PRESET_DATA.config }
+    : {
+        engine: 'google',
+        bgColor: '#0f0f11',
+        bgImage: null, 
+        customUrl: '',
+        searchWidth: 560,
+        searchOpacity: 0.1,
+        searchBackdropBlur: 20,
+        wpBlur: 0,
+        wpBrightness: 1.0,
+        searchLeft: 50,
+        searchTop: 45,
+        // Radial Wheel 轮盘配置
+        wheelEnabled: true,
+        wheelOpenNewTab: true,
+        wheelBgColor: '#12141a',
+        wheelBgImage: '',
+        wheelBgOpacity: 0.9,
+        wheelIconOpacity: 1.0,
+        wheelShowTitle: true,
+        wheelShowUrl: false,
+        wheelSlots: {
+          n:  { mode: 'auto', bookmarkId: null },
+          ne: { mode: 'auto', bookmarkId: null },
+          e:  { mode: 'auto', bookmarkId: null },
+          se: { mode: 'auto', bookmarkId: null },
+          s:  { mode: 'auto', bookmarkId: null },
+          sw: { mode: 'auto', bookmarkId: null },
+          w:  { mode: 'auto', bookmarkId: null },
+          nw: { mode: 'auto', bookmarkId: null }
+        }
+      };
 
   const engineUrls = {
     google: "https://www.google.com/search?q=",

@@ -46,6 +46,7 @@ const TabulaWheel = (function () {
   let currentState = STATE_IDLE;
   let longPressTimer = null;
   let suppressNextClick = false;
+  let selectedSectorIndices = new Set(); // 多开模式：记录已多选的扇区索引集合
 
   // 坐标记录
   let gestureOrigin = { x: 0, y: 0 };
@@ -262,6 +263,8 @@ const TabulaWheel = (function () {
     }
   }
 
+  let bgLayerEl = null;
+
   /**
    * 应用轮盘主题自定义 (背景颜色 / 背景图片 / 不透明度 / 文本隐藏 / 网址展示)
    */
@@ -275,17 +278,27 @@ const TabulaWheel = (function () {
     const showTitle = config.wheelShowTitle !== false;
     const showUrl = config.wheelShowUrl === true;
 
-    // 设置 CSS 变量与动态 RGBA 背景色
+    // 设置 CSS 变量与动态图标不透明度
     discEl.style.setProperty('--wheel-icon-opacity', iconOpacity);
-    discEl.style.backgroundColor = hexToRgba(bgColor, bgOpacity);
+
+    // 确保独立的背景层存在
+    if (!bgLayerEl) {
+      bgLayerEl = discEl.querySelector('.wheel-disc-bg');
+      if (!bgLayerEl) {
+        bgLayerEl = document.createElement('div');
+        bgLayerEl.className = 'wheel-disc-bg';
+        discEl.insertBefore(bgLayerEl, discEl.firstChild);
+      }
+    }
+
+    // 无论有无背景图片，bgOpacity 都能精确控制该背景层的透明度
+    bgLayerEl.style.backgroundColor = bgColor;
+    bgLayerEl.style.opacity = bgOpacity;
 
     if (bgImage) {
-      discEl.style.backgroundImage = `url("${bgImage}")`;
-      discEl.style.backgroundSize = 'cover';
-      discEl.style.backgroundPosition = 'center';
-      discEl.style.backgroundRepeat = 'no-repeat';
+      bgLayerEl.style.backgroundImage = `url("${bgImage}")`;
     } else {
-      discEl.style.backgroundImage = 'none';
+      bgLayerEl.style.backgroundImage = 'none';
     }
 
     if (!showTitle) {
@@ -313,6 +326,7 @@ const TabulaWheel = (function () {
       document.body.appendChild(overlayEl);
     }
     overlayEl.innerHTML = '';
+    bgLayerEl = null;
 
     // 1. 轮盘拟态玻璃圆盘容器
     discEl = document.createElement('div');
@@ -502,19 +516,28 @@ const TabulaWheel = (function () {
       overlayEl.classList.remove('pinned');
     }
 
-    // 1. 扇区与槽位高亮
+    // 1. 扇区与槽位高亮 (支持单选跟手悬浮与多选持久高亮)
     for (let i = 0; i < 8; i++) {
       const isActive = i === activeSectorIndex;
+      const isSelected = selectedSectorIndices.has(i);
       if (sectorPaths[i]) {
         sectorPaths[i].classList.toggle('active', isActive);
+        sectorPaths[i].classList.toggle('multi-selected', isSelected);
       }
       if (slotNodes[i]) {
         slotNodes[i].classList.toggle('active', isActive);
+        slotNodes[i].classList.toggle('multi-selected', isSelected);
       }
     }
 
-    // 2. 中心预览内容更新
-    if (activeSectorIndex >= 0 && activeSectorIndex < 8 && resolvedSlots[activeSectorIndex]) {
+    // 2. 中心预览内容更新 (多开模式展示多选统计面板)
+    if (selectedSectorIndices.size > 0) {
+      centerHubEl.classList.add('has-selection', 'multi-mode');
+      centerIconEl.innerHTML = `<span class="multi-count-badge">${selectedSectorIndices.size}</span>`;
+      centerTitleEl.textContent = `已选 ${selectedSectorIndices.size} 个书签`;
+      centerDomainEl.textContent = '松开中键全部打开';
+    } else if (activeSectorIndex >= 0 && activeSectorIndex < 8 && resolvedSlots[activeSectorIndex]) {
+      centerHubEl.classList.remove('multi-mode');
       const slotData = resolvedSlots[activeSectorIndex];
       if (slotData.bookmark) {
         centerHubEl.classList.add('has-selection');
@@ -536,10 +559,10 @@ const TabulaWheel = (function () {
         centerDomainEl.textContent = '可在设置中绑定';
       }
     } else {
-      centerHubEl.classList.remove('has-selection');
+      centerHubEl.classList.remove('has-selection', 'multi-mode');
       centerIconEl.innerHTML = '';
       centerTitleEl.textContent = 'Tabula';
-      centerDomainEl.textContent = currentState === STATE_PINNED ? '点击扇区打开' : '滑向扇区松开';
+      centerDomainEl.textContent = currentState === STATE_PINNED ? '点击扇区打开' : '滑向松开 / 左键多选';
     }
   }
 
@@ -553,9 +576,10 @@ const TabulaWheel = (function () {
     // 实时同步外观主题 (背景颜色与背景图片)
     applyWheelTheme();
 
-    // 立即切换为 GESTURE_ACTIVE
+    // 立即切换为 GESTURE_ACTIVE 并重置多选集合
     currentState = STATE_GESTURE_ACTIVE;
     activeSectorIndex = -1;
+    selectedSectorIndices.clear();
 
     // 1. 记录物理手势原点
     gestureOrigin = { x: clientX, y: clientY };
@@ -611,11 +635,47 @@ const TabulaWheel = (function () {
   function hideWheel() {
     currentState = STATE_IDLE;
     activeSectorIndex = -1;
+    selectedSectorIndices.clear();
     if (longPressTimer) {
       clearTimeout(longPressTimer);
       longPressTimer = null;
     }
     renderUIState();
+  }
+
+  /**
+   * 多开模式：批量并发打开选中的全部书签
+   */
+  async function executeBatch(indicesSet) {
+    const indices = Array.from(indicesSet);
+    if (indices.length === 0) {
+      hideWheel();
+      return;
+    }
+
+    currentState = STATE_EXECUTE;
+    const bookmarksToOpen = [];
+    for (const idx of indices) {
+      const slotData = resolvedSlots[idx];
+      if (slotData && slotData.bookmark) {
+        bookmarksToOpen.push(slotData.bookmark);
+      }
+    }
+
+    // 累加所有选中书签频次并并发打开
+    for (const bookmark of bookmarksToOpen) {
+      if (typeof window.TabulaStorage !== 'undefined' && bookmark.id) {
+        window.TabulaStorage.incrementFrequency(bookmark.id);
+      }
+      if (typeof chrome !== 'undefined' && chrome.tabs && chrome.tabs.create) {
+        chrome.tabs.create({ url: bookmark.url, active: false });
+      } else {
+        window.open(bookmark.url, '_blank');
+      }
+    }
+
+    selectedSectorIndices.clear();
+    hideWheel();
   }
 
   /**
@@ -685,16 +745,43 @@ const TabulaWheel = (function () {
 
   // ==== Pointer / Mouse 事件监听体系 ====
 
-  function handlePointerDown(e) {
+  function handleMouseDown(e) {
     const config = getConfig();
 
-    // 严格限制：仅响应鼠标中键 (button === 1 / 滚轮按下)
+    // 1. 多开模式交互：在轮盘已展开态下，按住中键同时点击左键 (button === 0)，切换勾选扇区
+    if (e.button === 0 && (currentState === STATE_GESTURE_ACTIVE || currentState === STATE_PINNED)) {
+      if (e.cancelable) e.preventDefault();
+      e.stopPropagation();
+
+      // 计算命中的扇区索引
+      let targetIndex = activeSectorIndex;
+      if (targetIndex < 0 || targetIndex >= 8) {
+        const dx = e.clientX - visualCenter.x;
+        const dy = e.clientY - visualCenter.y;
+        const dist = Math.hypot(dx, dy);
+        const angle = Math.atan2(dy, dx);
+        targetIndex = computeSectorIndex(angle, dist, -1);
+      }
+
+      if (targetIndex >= 0 && targetIndex < 8 && resolvedSlots[targetIndex]?.bookmark) {
+        if (selectedSectorIndices.has(targetIndex)) {
+          selectedSectorIndices.delete(targetIndex);
+        } else {
+          selectedSectorIndices.add(targetIndex);
+        }
+        suppressNextClick = true;
+        scheduleUpdateUI();
+      }
+      return;
+    }
+
+    // 2. 严格限制唤醒：仅响应鼠标中键 (button === 1 / 滚轮按下)
     if (e.button !== 1) return;
     if (config.wheelEnabled === false) return;
 
     if (e.cancelable) e.preventDefault();
 
-    // 若当前轮盘已在开启或驻留状态，中键点击视为关闭切换 (Toggle)
+    // 若当前轮盘已在开启或驻留状态，中键再次点击视为关闭切换 (Toggle)
     if (currentState === STATE_PINNED || currentState === STATE_GESTURE_ACTIVE) {
       hideWheel();
       return;
@@ -752,7 +839,7 @@ const TabulaWheel = (function () {
     }
   }
 
-  function handlePointerUp(e) {
+  function handleMouseUp(e) {
     if (currentState === STATE_PRESS_PENDING) {
       // 在延迟触发前松手：属于普通轻点，取消长按
       if (longPressTimer) {
@@ -763,14 +850,29 @@ const TabulaWheel = (function () {
       return;
     }
 
-    if (currentState === STATE_GESTURE_ACTIVE) {
+    // 1. 若松开的是鼠标左键 (button === 0)，保持轮盘开启进行后续多选或等待松开中键
+    if (e.button === 0 && (currentState === STATE_GESTURE_ACTIVE || currentState === STATE_PINNED)) {
+      if (e.cancelable) e.preventDefault();
+      e.stopPropagation();
+      suppressNextClick = true;
+      return;
+    }
+
+    // 2. 松开鼠标中键 (button === 1 或手势主按键)
+    if (currentState === STATE_GESTURE_ACTIVE && (e.button === 1 || e.button === undefined)) {
       suppressNextClick = true;
 
-      // 1. 滑动到某个有效书签扇区：松开中键/左键立即打开书签！
+      // 如果已进行了多选：一键全部并发打开
+      if (selectedSectorIndices.size > 0) {
+        executeBatch(selectedSectorIndices);
+        return;
+      }
+
+      // 原始单选模式：滑动到某个有效书签扇区，松开立即打开
       if (activeSectorIndex >= 0 && resolvedSlots[activeSectorIndex]?.bookmark) {
         executeSector(activeSectorIndex);
       } else {
-        // 2. 未滑动到任何有效书签或在中心死区松开：立即关闭轮盘
+        // 未滑动到任何有效书签或在中心死区松开：立即关闭轮盘
         hideWheel();
       }
     }
@@ -849,22 +951,18 @@ const TabulaWheel = (function () {
       try {
         buildDOM();
 
-        // 注册 Pointer / Mouse 事件
-        document.addEventListener('pointerdown', handlePointerDown);
+        // 注册捕获阶段 Mouse & Pointer 事件，确保按住中键时左键点击被 100% 捕获
+        document.addEventListener('mousedown', handleMouseDown, true);
+        document.addEventListener('mouseup', handleMouseUp, true);
         document.addEventListener('pointermove', handlePointerMove, { passive: true });
-        document.addEventListener('pointerup', handlePointerUp, { passive: true });
+        document.addEventListener('mousemove', handlePointerMove, { passive: true });
 
-        // 拦截并支持鼠标中键点击 (auxclick & mousedown)
+        // 拦截并支持鼠标中键点击 (auxclick)
         document.addEventListener('auxclick', (e) => {
           if (e.button === 1 && isAllowableSurface(e.target)) {
             if (e.cancelable) e.preventDefault();
           }
-        });
-        document.addEventListener('mousedown', (e) => {
-          if (e.button === 1 && isAllowableSurface(e.target)) {
-            if (e.cancelable) e.preventDefault();
-          }
-        });
+        }, true);
 
         // 阻止原生拖拽和选中文本干扰长按
         document.addEventListener('dragstart', (e) => {
