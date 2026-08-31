@@ -80,7 +80,5 @@ const PinyinMatch = (function() {
   return { match };
 })();
 
-// Assign to window
-if (typeof window !== 'undefined') {
-  window.PinyinMatch = PinyinMatch;
-}
+// Expose the matcher in both extension pages and the background service worker.
+globalThis.PinyinMatch = PinyinMatch;

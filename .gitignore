@@ -14,6 +14,10 @@ docs/
 # --- 开发环境与辅助工具 (Dev Environment) ---
 scripts/
 tests/
+!tests/
+tests/*
+!tests/omnibox.smoke.js
+!tests/wallpaper-thumbnail.smoke.js
 test_*.js
 test-results/
 test_results/

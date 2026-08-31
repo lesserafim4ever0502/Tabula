@@ -15,6 +15,7 @@ A minimalist, **zero-latency**, **glassmorphism-styled** browser start page exte
     - Supports Google, Bing, Baidu, and **Custom URL Templates**.
     - Fuzzy matching logic based on Titles, URLs, and custom Aliases.
     - **Multi-bookmark Open**: Enter multiple terms separated by commas (e.g., `x,yt,bi`) to open the top results for each simultaneously.
+    - **Omnibox Launcher**: Type `t`, press `Space`, then search bookmarks directly from Chrome's address bar. Comma-separated multi-open and `/query` web search are supported here too.
 - **📂 Minimalist Manager**: A sleek right-side drawer for bookmark management with real-time search filtering.
 - **🔁 Local Odin Sync**: Syncs bookmarks and aliases to Odin through `http://127.0.0.1:29000` when Odin is running. Includes connection status, dry-run preview, scoped sync choices, and result details. This is a local-only integration and does not use internet services.
 
@@ -30,7 +31,8 @@ A minimalist, **zero-latency**, **glassmorphism-styled** browser start page exte
 2. Enable "Developer Mode".
 3. Click "Load unpacked" and select the project root directory.
 4. Press `Ctrl/Cmd + ,` or click the bottom-left gear icon to enter Settings.
-5. To sync bookmarks to Odin, keep Odin running, open Settings → Data & Backup, choose a sync scope, preview the merge, then click Sync to Odin.
+5. To launch from the address bar, type `t`, press `Space`, enter a bookmark title or alias, then press `Enter`.
+6. To sync bookmarks to Odin, keep Odin running, open Settings → Data & Backup, choose a sync scope, preview the merge, then click Sync to Odin.
 
 ## 🏗️ Architecture
 

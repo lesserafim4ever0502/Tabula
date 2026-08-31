@@ -6,6 +6,12 @@
   "chrome_url_overrides": {
     "newtab": "index.html"
   },
+  "omnibox": {
+    "keyword": "t"
+  },
+  "background": {
+    "service_worker": "js/background.js"
+  },
   "permissions": [
     "storage",
     "unlimitedStorage"

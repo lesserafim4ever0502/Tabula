@@ -6,10 +6,15 @@
 graph TD
     A[index.html] --> B[css/style.css]
     A --> C[js/search.js]
+    A --> H[js/bookmark_match.js]
     A --> D[js/settings.js]
     A --> E[js/drawer.js]
     A --> G[js/wheel.js]
     C --> F[js/storage.js]
+    C --> H
+    I[js/background.js] --> H
+    I --> K[chrome.storage.local]
+    J[Chrome Omnibox] --> I
     E --> F
     G --> F
     G -.-> D
@@ -32,6 +37,8 @@ graph TD
 
 - **js/wheel.js**: Quicker-style left-click long-press radial bookmark menu (5-state Pointer machine, dual origins, muscle-memory stable 8-direction slots, sector retention hysteresis).
 - **js/search.js**: Handles command extraction (`/`), multi-term delimiter splitting (`,`), frequency-scored bookmark retrieval, spatial-aware dropdown flipping, and `dismiss()`.
+- **js/bookmark_match.js**: Worker-safe shared bookmark matcher for title, alias, URL, pinyin, recency, and frequency ranking.
+- **js/background.js**: Manifest V3 service worker for the `t` omnibox keyword, suggestions, selected-result launch, multi-open, and usage tracking.
 - **js/storage.js**: Adapts to `chrome.storage.local` with fallback to `localStorage`.
 - **js/settings.js**: Single config owner (`tabula_config`), owns visual settings, wheel menu configuration & slot binding, backup/restore, and Odin bookmark sync.
 - **js/drawer.js**: High-performance bookmark management & full data backup (Export/Import), with `isOpen()` status detection.

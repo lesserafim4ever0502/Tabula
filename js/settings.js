@@ -1248,6 +1248,21 @@ const TabulaSettings = (function () {
     return structuredClone(config);
   }
 
+  /**
+   * 生成微型缩略图 (用于首屏极致无感加载)
+   * @param {HTMLImageElement} img
+   * @returns {string} Base64 DataURI
+   */
+  function generateThumbnail(img) {
+    const thumbCanvas = document.createElement('canvas');
+    const size = 40;
+    thumbCanvas.width = size;
+    thumbCanvas.height = size;
+    const tctx = thumbCanvas.getContext('2d');
+    tctx.drawImage(img, 0, 0, size, size);
+    return thumbCanvas.toDataURL('image/webp', 0.2);
+  }
+
   return {
     async init() {
       modalOverlay = document.getElementById('settings-modal');

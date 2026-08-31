@@ -14,14 +14,6 @@ const TabulaSearch = (function () {
   let filteredBookmarks = [];
   let selectedIndex = -1; // -1 表示没选中，或者焦点还在 input 上
 
-  function compareBookmarkRank(a, b) {
-    if (a.score !== b.score) return b.score - a.score;
-    if ((b.lastUsedAt || 0) !== (a.lastUsedAt || 0)) {
-      return (b.lastUsedAt || 0) - (a.lastUsedAt || 0);
-    }
-    return (b.frequency || 0) - (a.frequency || 0);
-  }
-
   // 统一图标渲染引擎：支持系统矢量图标、用户 Emoji、及自定义上传图片（Base64）
   function getIconHTML(icon) {
     if (!icon || icon === '📌' || icon === 'i-bookmark') {
@@ -155,35 +147,8 @@ const TabulaSearch = (function () {
       return;
     }
 
-    // 执行带权重的模糊匹配：计算匹配分值以确定呈现优先级
-    filteredBookmarks = allBM.map(bm => {
-      const matchQuery = query.toLowerCase();
-      
-      // 1. URL：严格包含匹配 (权重: 1)
-      const isUrlMatch = bm.url.toLowerCase().includes(matchQuery);
-      
-      // 2. 标题 & 别名：深度模糊匹配 (权重: 2)
-      const isTitleMatch = window.PinyinMatch ? 
-                          window.PinyinMatch.match(bm.title, matchQuery) : 
-                          bm.title.toLowerCase().includes(matchQuery);
-      const isAliasMatch = window.PinyinMatch ? 
-                          window.PinyinMatch.match(bm.alias || '', matchQuery) : 
-                          (bm.alias || '').toLowerCase().includes(matchQuery);
-
-      let score = 0;
-      if (isTitleMatch || isAliasMatch) {
-        // 区分首字母/前缀精准命中(score=3) vs 模糊子序列命中(score=2)
-        const titleStarts = bm.title.toLowerCase().startsWith(matchQuery);
-        const aliasStarts = (bm.alias || '').toLowerCase().startsWith(matchQuery);
-        score = (titleStarts || aliasStarts) ? 3 : 2;
-      } else if (isUrlMatch) {
-        score = 1;
-      }
-
-      return { ...bm, score };
-    })
-    .filter(bm => bm.score > 0)
-    .sort(compareBookmarkRank);
+    // 页面与 Omnibox 共用同一套匹配和排序规则。
+    filteredBookmarks = window.TabulaBookmarkMatch.matchBookmarks(allBM, query);
 
     // 容错处理：当重新输入内容时，清空选择项状态以便给回车默认触发 Web 留后路
     if (e && e.key !== 'ArrowDown' && e.key !== 'ArrowUp') {
@@ -218,32 +183,10 @@ const TabulaSearch = (function () {
 
     // 模式 C: 书签多开功能 (当输入包含逗号时触发)
     if (rawVal.includes(',') || rawVal.includes('，')) {
-      const parts = rawVal.split(/[,，]/).map(p => p.trim()).filter(Boolean);
+      const parts = window.TabulaBookmarkMatch.splitQueries(rawVal);
       if (parts.length > 1) {
         const allBM = await window.TabulaStorage.getAll();
-        const targets = [];
-        
-        for (const part of parts) {
-          const matchQuery = part.toLowerCase();
-          const matchedBMs = allBM.map(bm => {
-            const isUrlMatch = bm.url.toLowerCase().includes(matchQuery);
-            const isTitleMatch = window.PinyinMatch ? window.PinyinMatch.match(bm.title, matchQuery) : bm.title.toLowerCase().includes(matchQuery);
-            const isAliasMatch = window.PinyinMatch ? window.PinyinMatch.match(bm.alias || '', matchQuery) : (bm.alias || '').toLowerCase().includes(matchQuery);
-            let score = 0;
-            if (isTitleMatch || isAliasMatch) {
-              const titleStarts = bm.title.toLowerCase().startsWith(matchQuery);
-              const aliasStarts = (bm.alias || '').toLowerCase().startsWith(matchQuery);
-              score = (titleStarts || aliasStarts) ? 3 : 2;
-            } else if (isUrlMatch) {
-              score = 1;
-            }
-            return { ...bm, score };
-          }).filter(bm => bm.score > 0).sort(compareBookmarkRank);
-          
-          if (matchedBMs.length > 0) {
-            targets.push(matchedBMs[0]);
-          }
-        }
+        const targets = window.TabulaBookmarkMatch.matchBestPerQuery(allBM, rawVal);
         
         if (targets.length > 0) {
           targets.forEach(t => window.TabulaStorage.incrementFrequency(t.id));
